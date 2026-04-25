@@ -4,11 +4,12 @@ import Job from './Job';
 import { useDispatch, useSelector } from 'react-redux';
 import store from '@/redux/store';
 import { setSearchedQuery } from '@/redux/jobSlice';
-import UseGetAllJobs from '@/Hooks/UseGetAllJobs';
+import useGetAllJobs from '@/hooks/useGetAllJobs';
+
 import { motion, AnimatePresence } from "framer-motion";
 
 const Browse = () => {
-    UseGetAllJobs();
+    useGetAllJobs();
     const { allJobs } = useSelector(store => store.job);
     const dispatch = useDispatch();
     useEffect(() => {

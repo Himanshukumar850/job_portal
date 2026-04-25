@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { setSearchCompanyByText } from '@/redux/CompanySlice'
 import AdminJobsTable from './AdminJobsTable'
-import useGetAllAdminJobs from '@/Hooks/useGetAllAdminJobs'
+import useGetAllAdminJobs from '@/hooks/useGetAllAdminJobs'
 import { setSearchJobByText } from '@/redux/jobSlice'
 
 function AdminJobs() {

@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { JOB_API_END_POINT } from '@/Utils/constant'
 import store from '@/redux/store';
 
-function UseGetAllJobs() {
+function useGetAllJobs() {
     const dispatch = useDispatch();
     const {searchedQuery} = useSelector(store =>store.job);
     
@@ -38,4 +38,4 @@ function UseGetAllJobs() {
     return null;  
 }
 
-export default UseGetAllJobs
+export default useGetAllJobs

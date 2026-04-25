@@ -3,7 +3,7 @@ import HeroSection from "./HeroSection";
 import CategoryCarousel from "./CategoryCarousel "
 import LatestJobs from "./LatestJobs"
 import Footer from "./Footer"
-import UseGetAllJobs from "@/Hooks/UseGetAllJobs";
+import useGetAllJobs from "@/hooks/useGetAllJobs";
 import { useSelector } from "react-redux";
 import store from "@/redux/store";
 import { useEffect } from "react";
@@ -11,7 +11,7 @@ import { Navigate } from "react-router-dom";
 
 
 const Home = () =>{
-    UseGetAllJobs();
+    useGetAllJobs();
     const {user} = useSelector(store =>store.auth);
     useEffect(() =>{
         if (user?.role === "recuiter"){

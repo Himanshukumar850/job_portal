@@ -4,7 +4,7 @@ import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import CompaniesTable from './CompaniesTable'
 import { useNavigate } from 'react-router-dom'
-import UseGetAllCompanies from '@/Hooks/useGetAllCompanies'
+import UseGetAllCompanies from '@/hooks/useGetAllCompanies'
 import { useDispatch } from 'react-redux'
 import { setSearchCompanyByText } from '@/redux/CompanySlice'
 

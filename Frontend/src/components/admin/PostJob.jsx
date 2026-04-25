@@ -13,7 +13,7 @@ import {
     SelectTrigger,
     SelectValue
 } from '../ui/select'
-import UseGetAllCompanies from '@/Hooks/useGetAllCompanies'
+import UseGetAllCompanies from '@/hooks/useGetAllCompanies'
 import axios from 'axios'
 import { JOB_API_END_POINT } from '@/Utils/constant'
 import { toast } from 'sonner'
