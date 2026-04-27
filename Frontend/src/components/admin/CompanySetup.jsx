@@ -10,7 +10,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { COMPANY_API_END_POINT } from "@/Utils/constant";
 import { useSelector } from "react-redux";
-import useGetCompanyById from "@/hooks/UseGetCompanyByid";
+import useGetCompanyById from "@/hooks/useGetCompanyByid";
 
 function CompanySetup() {
   const [input, setInput] = useState({
