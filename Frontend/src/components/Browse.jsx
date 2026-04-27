@@ -4,7 +4,7 @@ import Job from './Job';
 import { useDispatch, useSelector } from 'react-redux';
 import store from '@/redux/store';
 import { setSearchedQuery } from '@/redux/jobSlice';
-import useGetAllJobs from '@/hooks/useGetAllJobs';
+import useGetAllJobs from '@/hooks/useGetAllJobs.jsx';
 
 import { motion, AnimatePresence } from "framer-motion";
 
