@@ -9,8 +9,7 @@ import store from '@/redux/store';
 
 function useGetAllJobs() {
     const dispatch = useDispatch();
-    const {searchedQuery} = useSelector(store =>store.job);
-    
+    const {searchedQuery} = useSelector(store =>store.job);  
     useEffect(() => {
         const fetchAllJobs = async () => {
             try {
