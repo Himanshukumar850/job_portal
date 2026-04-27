@@ -107,25 +107,6 @@ const About = () => {
             <p className="text-gray-500 text-sm">Founder & Developer</p>
           </div>
 
-          {/* <div className="bg-white p-6 rounded-xl shadow">
-            <img
-              src="https://via.placeholder.com/100"
-              alt="team"
-              className="mx-auto rounded-full mb-4"
-            />
-            <h3 className="font-semibold">Team Member</h3>
-            <p className="text-gray-500 text-sm">Frontend Developer</p>
-          </div> */}
-
-          {/* <div className="bg-white p-6 rounded-xl shadow">
-            <img
-              src="https://via.placeholder.com/100"
-              alt="team"
-              className="mx-auto rounded-full mb-4"
-            />
-            <h3 className="font-semibold">Team Member</h3>
-            <p className="text-gray-500 text-sm">Backend Developer</p>
-          </div> */}
         </div>
       </section>
 
