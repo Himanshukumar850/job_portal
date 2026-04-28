@@ -2,10 +2,9 @@
 
 import { setAllJobs } from '@/redux/jobSlice';
 import axios from 'axios'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { JOB_API_END_POINT } from '@/Utils/constant'
-import store from '@/redux/store';
 
 function useGetAllJobs() {
     const dispatch = useDispatch();
@@ -32,7 +31,7 @@ function useGetAllJobs() {
         
         fetchAllJobs();
         
-    }, [dispatch]);  
+    }, [dispatch, searchedQuery]);  
     
     return null;  
 }
