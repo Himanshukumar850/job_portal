@@ -22,9 +22,9 @@ const Browse = () => {
     return (
         <div >
             <Navbar />
-            <div className='max-w-7xl mx-auto my-10'>
-                <h1 className='font-bold'>Search Result ({allJobs.length})</h1>
-                < div className='grid grid-cols-3 gap-3'>
+            <div className='max-w-7xl mx-auto my-10 px-4'>
+                <h1 className='font-bold mb-4'>Search Result ({allJobs.length})</h1>
+                < div className='grid grid-cols-3 gap-3 sm:grid-cols-2 lg:grid-cols-3  px-4'>
                     {
                         <AnimatePresence>
                             {allJobs.map((job, index) => (
