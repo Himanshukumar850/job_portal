@@ -12,9 +12,9 @@ const LatestJobCard = ({job}) => {
             </div>
             <div>
                 <h1 className="font-bold text-lg my-2">{job?.title }</h1>
-                <p className="text-sm text-gray-600">{job?.description} </p>
+                <p className="text-sm text-gray-600 break-words line-clamp-2">{job?.description} </p>
             </div>
-            <div className="flex items-center gap-2 ">
+            <div className="flex items-center gap-2 flex-wrap mt-2 ">
                 <Badge className={'text-blue-700 font-bold'} variant="ghost">{job?.position} </Badge>
                 <Badge className={'text-[#F83002] font-bold'} variant="ghost">{job?.jobType} </Badge>
                 <Badge className={'text-[#7209b7] font-bold'} variant="ghost">{job?.salary}LPA </Badge>
