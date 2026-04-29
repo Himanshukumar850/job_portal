@@ -24,11 +24,21 @@ function Profile() {
                 <div className='flex justify-between'>
                     <div className='flex items-center gap-4 '>
                         <Avatar className="h-20 w-20">
-                            <AvatarImage src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvDxGmA596-b4RHHw24fP5UtONGEilzMI0Ow&s" alt="profile" />
+                            {user?.profile?.profilePicture ? (
+                                <AvatarImage
+                                    src={user.profile.profilePicture}
+                                    alt="profile"
+                                    className="object-cover"
+                                />
+                            ) : (
+                                <div className=" w-full h-full flex items-center justify-center bg-gray-300 text-lg font-bold rounded-full ">
+                                    {user?.fullname?.charAt(0)}
+                                </div>
+                            )}
                         </Avatar>
 
                         <div>
-                            < h1 className='font-medium text-xl'> {user?.fullname}</h1>
+                            <h1 className='font-medium text-xl'> {user?.fullname}</h1>
                             <p>{user?.profile?.bio}  </p>
                         </div>
                     </div>
