@@ -19,7 +19,7 @@ const Login = () => {
     role: "",
   });
 
-  const {loading,user} = useSelector(store=>store.auth);
+  const { loading, user } = useSelector(store => store.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -30,7 +30,7 @@ const Login = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
-        dispatch(setLoading(true))
+      dispatch(setLoading(true))
 
       const res = await axios.post(
         `${USER_API_END_POINT}/login`,
@@ -52,28 +52,32 @@ const Login = () => {
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Login failed");
-    }finally{
-        dispatch(setLoading(false))
+    } finally {
+      dispatch(setLoading(false))
     }
   };
 
-  useEffect(() =>{
-    if(user){
+  useEffect(() => {
+    if (user) {
       navigate('/')
     }
-  },[])
+  }, [])
 
   return (
     <div>
       <Navbar />
 
-      <div className="flex items-center justify-center max-w-7xl mx-auto">
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
 
-        <form onSubmit={submitHandler} className="w-1/2 border border-gray-200 rounded-md p-4 my-10">
+        <form
+          onSubmit={submitHandler}
+          className="w-full max-w-md bg-white shadow-lg rounded-2xl p-6"
+        >
 
-          <h1 className="font-bold text-xl mb-5">Login</h1>
+          <h1 className="font-bold text-2xl text-center mb-6">Login</h1>
 
-          <div className="my-2">
+          {/* Email */}
+          <div className="mb-4">
             <Label>Email</Label>
             <Input
               type="email"
@@ -81,10 +85,12 @@ const Login = () => {
               name="email"
               onChange={changeeventHandler}
               placeholder="Enter your Email"
+              className="mt-1 focus:ring-2 focus:ring-[#6A38C2]"
             />
           </div>
 
-          <div className="my-2">
+          {/* Password */}
+          <div className="mb-4">
             <Label>Password</Label>
             <Input
               type="password"
@@ -92,47 +98,57 @@ const Login = () => {
               name="password"
               onChange={changeeventHandler}
               placeholder="Enter your password"
+              className="mt-1 focus:ring-2 focus:ring-[#6A38C2]"
             />
           </div>
 
-          <div className="flex items-center gap-6 mt-4">
-
-            <div className="flex items-center space-x-2">
+          {/* Role */}
+          <div className="flex justify-center gap-6 mt-4 text-sm">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
                 checked={input.role === "student"}
                 onChange={changeeventHandler}
                 name="role"
                 value="student"
-                id="student"
               />
-              <Label htmlFor="student">Student</Label>
-            </div>
+              Student
+            </label>
 
-            <div className="flex items-center space-x-2">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
                 checked={input.role === "recruiter"}
                 onChange={changeeventHandler}
                 name="role"
                 value="recruiter"
-                id="recruiter"
               />
-              <Label htmlFor="recruiter">Recruiter</Label>
-            </div>
-
+              Recruiter
+            </label>
           </div>
-          {
-            loading ? <Button className="w-full my-4 " > <Loader2 className="mr-2 w-4 animate-spin" />Please wait </Button> : <Button type="submit" className="w-full my-4 bg-black text-white">
-            Login
-          </Button>
-          }
-          <span>
+
+          {/* Button */}
+          {loading ? (
+            <Button className="w-full my-4 bg-[#6A38C2]">
+              <Loader2 className="mr-2 w-4 animate-spin" />
+              Please wait
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              className="w-full my-4 bg-[#6A38C2] hover:opacity-90"
+            >
+              Login
+            </Button>
+          )}
+
+          {/* Signup */}
+          <p className="text-center text-sm mt-2">
             Don't have an account{" "}
-            <Link to="/signup" className="text-blue-600">
+            <Link to="/signup" className="text-[#6A38C2] font-medium">
               Signup
             </Link>
-          </span>
+          </p>
 
         </form>
 
