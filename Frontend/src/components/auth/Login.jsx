@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { USER_API_END_POINT } from "../../Utils/constant";
 import { useDispatch, useSelector } from "react-redux";
 import { setLoading, setUser } from "@/redux/authslice";
-import { Loader, Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
 
@@ -18,6 +18,9 @@ const Login = () => {
     password: "",
     role: "",
   });
+
+ 
+  const [showPassword, setShowPassword] = useState(false);
 
   const { loading, user } = useSelector(store => store.auth);
   const navigate = useNavigate();
@@ -30,7 +33,7 @@ const Login = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
-      dispatch(setLoading(true))
+      dispatch(setLoading(true));
 
       const res = await axios.post(
         `${USER_API_END_POINT}/login`,
@@ -50,18 +53,15 @@ const Login = () => {
       }
 
     } catch (error) {
-      console.log(error);
       toast.error(error.response?.data?.message || "Login failed");
     } finally {
-      dispatch(setLoading(false))
+      dispatch(setLoading(false));
     }
   };
 
   useEffect(() => {
-    if (user) {
-      navigate('/')
-    }
-  }, [])
+    if (user) navigate("/");
+  }, [user]);
 
   return (
     <div>
@@ -89,17 +89,27 @@ const Login = () => {
             />
           </div>
 
-          {/* Password */}
+          
           <div className="mb-4">
             <Label>Password</Label>
-            <Input
-              type="password"
-              value={input.password}
-              name="password"
-              onChange={changeeventHandler}
-              placeholder="Enter your password"
-              className="mt-1 focus:ring-2 focus:ring-[#6A38C2]"
-            />
+
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={input.password}
+                name="password"
+                onChange={changeeventHandler}
+                placeholder="Enter your password"
+                className="mt-1 pr-10 focus:ring-2 focus:ring-[#6A38C2]"
+              />
+
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3 cursor-pointer"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </span>
+            </div>
           </div>
 
           {/* Role */}
