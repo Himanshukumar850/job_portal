@@ -63,7 +63,7 @@ const Navbar = () => {
                         }
                     </ul>
 
-                    
+                    {/* Auth Buttons */}
                     {
                         !user ? (
                             <div className='flex items-center gap-2'>
