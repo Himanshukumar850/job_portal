@@ -9,6 +9,7 @@ import axios from 'axios'
 import { USER_API_END_POINT } from '@/Utils/constant'
 import { toast } from 'sonner'
 import { setUser } from '@/redux/authslice'
+import { motion } from "framer-motion"
 
 const Navbar = () => {
   const [open, setOpen] = useState(false)
@@ -33,7 +34,7 @@ const Navbar = () => {
   }
 
   return (
-    <header className="w-full bg-white border-b sticky top-0 z-50">
+    <header className="w-full bg-white backdrop-blur-sm border-b sticky top-0 z-50">
 
       {/* FULL WIDTH NAVBAR */}
       <div className="w-full max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
@@ -134,38 +135,77 @@ const Navbar = () => {
         </div>
       </div>
 
+      
       {/* Mobile Menu */}
       {open && (
-        <div className="md:hidden w-full bg-white border-t px-4 py-4 space-y-4">
+        <div className="md:hidden w-full bg-white border-t shadow-lg px-4 py-5 space-y-4">
 
-          {
-            user && user.role === 'recruiter' ? (
+          {/* Nav Links */}
+          <div className="flex flex-col gap-3 text-lg font-medium">
+
+            {user && user.role === 'recruiter' ? (
               <>
-                <Link to="/admin/companies" onClick={() => setOpen(false)}>Companies</Link>
-                <Link to="/admin/jobs" onClick={() => setOpen(false)}>Jobs</Link>
+                <Link
+                  to="/admin/companies"
+                  onClick={() => setOpen(false)}
+                  className="py-2 px-3 rounded-lg hover:bg-gray-100 transition"
+                >
+                  Companies
+                </Link>
+
+                <Link
+                  to="/admin/jobs"
+                  onClick={() => setOpen(false)}
+                  className="py-2 px-3 rounded-lg hover:bg-gray-100 transition"
+                >
+                  Jobs
+                </Link>
               </>
             ) : (
               <>
-                <Link to="/" onClick={() => setOpen(false)}>Home</Link>
-                <Link to="/jobs" onClick={() => setOpen(false)}>Jobs</Link>
-                <Link to="/browse" onClick={() => setOpen(false)}>Browse</Link>
-              </>
-            )
-          }
+                <Link
+                  to="/"
+                  onClick={() => setOpen(false)}
+                  className="py-2 px-3 rounded-lg hover:bg-gray-100 transition"
+                >
+                  Home
+                </Link>
 
+                <Link
+                  to="/jobs"
+                  onClick={() => setOpen(false)}
+                  className="py-2 px-3 rounded-lg hover:bg-gray-100 transition"
+                >
+                  Jobs
+                </Link>
+
+                <Link
+                  to="/browse"
+                  onClick={() => setOpen(false)}
+                  className="py-2 px-3 rounded-lg hover:bg-gray-100 transition"
+                >
+                  Browse
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Auth Buttons */}
           {!user && (
-            <div className="flex flex-col gap-2 pt-2">
+            <div className="flex flex-col gap-3 pt-4 border-t">
               <Link to="/login" onClick={() => setOpen(false)}>
-                <Button variant="outline" className="w-full">Login</Button>
+                <Button variant="outline" className="w-full py-2">
+                  Login
+                </Button>
               </Link>
+
               <Link to="/signup" onClick={() => setOpen(false)}>
-                <Button className="bg-[#6A38C2] text-white w-full">
-                  SignUp
+                <Button className="bg-[#6A38C2] text-white w-full py-2">
+                  Sign Up
                 </Button>
               </Link>
             </div>
           )}
-
         </div>
       )}
 
