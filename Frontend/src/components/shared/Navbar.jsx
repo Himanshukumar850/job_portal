@@ -38,6 +38,7 @@ const Navbar = () => {
       const res = await axios.get(`${USER_API_END_POINT}/logout`, {
         withCredentials: true,
       });
+
       if (res.data.success) {
         dispatch(setUser(null));
         navigate("/");
@@ -57,9 +58,11 @@ const Navbar = () => {
 
   return (
     <>
-      {/*  HEADER  */}
+      {/* ================= HEADER ================= */}
       <header className="w-full bg-white border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+          
+          {/* Logo */}
           <h1 className="text-xl sm:text-2xl font-bold">
             Job <span className="text-[#F3002F]">Portal</span>
           </h1>
@@ -98,25 +101,50 @@ const Navbar = () => {
             ) : (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Avatar className="cursor-pointer">
+                  <Avatar className="cursor-pointer h-10 w-10">
                     <AvatarImage src={user?.profile?.profilePicture} />
                     <AvatarFallback>CN</AvatarFallback>
                   </Avatar>
                 </PopoverTrigger>
 
-                <PopoverContent className="w-64 p-4">
-                  <p className="font-semibold">{user?.fullname}</p>
+                {/* ✅ CLEAN DROPDOWN */}
+                <PopoverContent className="w-72 p-0 rounded-xl shadow-lg border bg-white overflow-hidden">
 
-                  <Link to="/profile" className="block mt-3">
-                    View Profile
-                  </Link>
+                  {/* USER INFO */}
+                  <div className="flex items-center gap-3 p-4 border-b">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user?.profile?.profilePicture} />
+                      <AvatarFallback>CN</AvatarFallback>
+                    </Avatar>
 
-                  <button
-                    onClick={logoutHandler}
-                    className="mt-3 text-red-500"
-                  >
-                    Logout
-                  </button>
+                    <div className="flex flex-col">
+                      <p className="font-semibold text-gray-900">
+                        {user?.fullname}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ACTIONS */}
+                  <div className="flex flex-col p-2">
+                    <Link
+                      to="/profile"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700"
+                    >
+                      <User2 size={18} />
+                      View Profile
+                    </Link>
+
+                    <button
+                      onClick={logoutHandler}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 w-full text-left"
+                    >
+                      <LogOut size={18} />
+                      Logout
+                    </button>
+                  </div>
                 </PopoverContent>
               </Popover>
             )}
@@ -137,19 +165,29 @@ const Navbar = () => {
           );
         })}
 
-        {/* Profile Button */}
-        <button
-          onClick={() => setOpenSheet(true)}
-          className="flex flex-col items-center text-xs"
-        >
-          <User size={20} />
-          Profile
-        </button>
+        {/* Profile / Login */}
+        {user ? (
+          <button
+            onClick={() => setOpenSheet(true)}
+            className="flex flex-col items-center text-xs"
+          >
+            <User size={20} />
+            Profile
+          </button>
+        ) : (
+          <Link
+            to="/login"
+            className="flex flex-col items-center text-xs"
+          >
+            <User size={20} />
+            Login
+          </Link>
+        )}
       </div>
 
-      {/*  MOBILE BOTTOM SHEET  */}
+      {/* ================= MOBILE BOTTOM SHEET ================= */}
       <AnimatePresence>
-        {openSheet && (
+        {openSheet && user && (
           <>
             {/* Overlay */}
             <motion.div
@@ -167,51 +205,46 @@ const Navbar = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
             >
-              {/* Close */}
+              {/* Header */}
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-semibold text-lg">Account</h3>
-                <X onClick={() => setOpenSheet(false)} />
+                <X
+                  className="cursor-pointer"
+                  onClick={() => setOpenSheet(false)}
+                />
               </div>
 
-              {user ? (
-                <>
-                  {/* User Info */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <Avatar>
-                      <AvatarImage src={user?.profile?.profilePicture} />
-                      <AvatarFallback>CN</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-semibold">{user?.fullname}</p>
-                      <p className="text-sm text-gray-500">
-                        {user?.profile?.bio || "No bio"}
-                      </p>
-                    </div>
-                  </div>
+              {/* User Info */}
+              <div className="flex items-center gap-3 mb-4">
+                <Avatar>
+                  <AvatarImage src={user?.profile?.profilePicture} />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold">{user?.fullname}</p>
+                  <p className="text-sm text-gray-500">
+                    {user?.profile?.bio || "No bio"}
+                  </p>
+                </div>
+              </div>
 
-                  {/* Actions */}
-                  <Link
-                    to="/profile"
-                    onClick={() => setOpenSheet(false)}
-                    className="flex items-center gap-2 p-3 rounded-lg hover:bg-gray-100"
-                  >
-                    <User2 size={18} />
-                    Profile
-                  </Link>
+              {/* Actions */}
+              <Link
+                to="/profile"
+                onClick={() => setOpenSheet(false)}
+                className="flex items-center gap-2 p-3 rounded-lg hover:bg-gray-100"
+              >
+                <User2 size={18} />
+                Profile
+              </Link>
 
-                  <button
-                    onClick={logoutHandler}
-                    className="flex items-center gap-2 p-3 rounded-lg text-red-500 hover:bg-red-50 w-full"
-                  >
-                    <LogOut size={18} />
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <Link to="/login" className="block text-center p-3">
-                  Login
-                </Link>
-              )}
+              <button
+                onClick={logoutHandler}
+                className="flex items-center gap-2 p-3 rounded-lg text-red-500 hover:bg-red-50 w-full"
+              >
+                <LogOut size={18} />
+                Logout
+              </button>
             </motion.div>
           </>
         )}
