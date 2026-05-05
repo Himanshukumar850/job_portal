@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { Button } from "../ui/button";
@@ -15,8 +15,9 @@ import {
   User,
   LogOut,
   User2,
+  X,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { USER_API_END_POINT } from "@/Utils/constant";
 import { toast } from "sonner";
@@ -28,6 +29,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [openSheet, setOpenSheet] = useState(false);
+
   const isActive = (path) => location.pathname.startsWith(path);
 
   const logoutHandler = async () => {
@@ -38,7 +41,8 @@ const Navbar = () => {
       if (res.data.success) {
         dispatch(setUser(null));
         navigate("/");
-        toast.success(res.data.message);
+        toast.success("Logged out successfully");
+        setOpenSheet(false);
       }
     } catch {
       toast.error("Logout failed");
@@ -53,22 +57,20 @@ const Navbar = () => {
 
   return (
     <>
-      {/* ================= NAVBAR ================= */}
+      {/*  HEADER  */}
       <header className="w-full bg-white border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
-
-          {/* Logo */}
           <h1 className="text-xl sm:text-2xl font-bold">
             Job <span className="text-[#F3002F]">Portal</span>
           </h1>
 
           {/* Desktop Nav */}
-          <ul className="hidden md:flex gap-8 font-medium relative">
+          <ul className="hidden md:flex gap-8 font-medium">
             {navItems.map((item, i) => (
-              <li key={i} className="relative">
+              <li key={i}>
                 <Link
                   to={item.path}
-                  className={`pb-1 ${
+                  className={`${
                     isActive(item.path)
                       ? "text-[#6A38C2]"
                       : "text-gray-700"
@@ -76,13 +78,6 @@ const Navbar = () => {
                 >
                   {item.label}
                 </Link>
-
-                {isActive(item.path) && (
-                  <motion.div
-                    layoutId="underline"
-                    className="absolute left-0 -bottom-1 h-[2px] w-full bg-[#6A38C2]"
-                  />
-                )}
               </li>
             ))}
           </ul>
@@ -109,46 +104,19 @@ const Navbar = () => {
                   </Avatar>
                 </PopoverTrigger>
 
-                {/* ✅ FIXED POPOVER */}
-                <PopoverContent className="w-80 p-4 rounded-xl bg-white border shadow-xl z-50">
+                <PopoverContent className="w-64 p-4">
+                  <p className="font-semibold">{user?.fullname}</p>
 
-                  <div className="flex items-center gap-3 border-b pb-3">
-                    <Avatar>
-                      <AvatarImage
-                        src={user?.profile?.profilePicture}
-                      />
-                      <AvatarFallback>CN</AvatarFallback>
-                    </Avatar>
+                  <Link to="/profile" className="block mt-3">
+                    View Profile
+                  </Link>
 
-                    <div>
-                      <h4 className="font-semibold text-gray-900">
-                        {user?.fullname}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {user?.profile?.bio || "No bio available"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2 mt-3">
-                    {user?.role === "student" && (
-                      <Link
-                        to="/profile"
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100"
-                      >
-                        <User2 size={18} />
-                        View Profile
-                      </Link>
-                    )}
-
-                    <button
-                      onClick={logoutHandler}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50"
-                    >
-                      <LogOut size={18} />
-                      Logout
-                    </button>
-                  </div>
+                  <button
+                    onClick={logoutHandler}
+                    className="mt-3 text-red-500"
+                  >
+                    Logout
+                  </button>
                 </PopoverContent>
               </Popover>
             )}
@@ -156,44 +124,98 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* ================= MOBILE BOTTOM NAV ================= */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.05)] flex justify-around py-2 z-50">
+      {/* ================= MOBILE NAV ================= */}
+      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t flex justify-around py-2 z-50">
 
         {navItems.map((item, i) => {
           const Icon = item.icon;
           return (
-            <motion.div key={i} whileTap={{ scale: 0.9 }}>
-              <Link
-                to={item.path}
-                className={`flex flex-col items-center text-xs ${
-                  isActive(item.path)
-                    ? "text-[#6A38C2]"
-                    : "text-gray-500"
-                }`}
-              >
-                <Icon size={20} />
-                {item.label}
-              </Link>
-            </motion.div>
+            <Link key={i} to={item.path} className="flex flex-col items-center text-xs">
+              <Icon size={20} />
+              {item.label}
+            </Link>
           );
         })}
 
-        {/* Profile / Login */}
-        <motion.div whileTap={{ scale: 0.9 }}>
-          <Link
-            to={user ? "/profile" : "/login"}
-            className={`flex flex-col items-center text-xs ${
-              isActive("/profile") || isActive("/login")
-                ? "text-[#6A38C2]"
-                : "text-gray-500"
-            }`}
-          >
-            <User size={20} />
-            {user ? "Profile" : "Login"}
-          </Link>
-        </motion.div>
-
+        {/* Profile Button */}
+        <button
+          onClick={() => setOpenSheet(true)}
+          className="flex flex-col items-center text-xs"
+        >
+          <User size={20} />
+          Profile
+        </button>
       </div>
+
+      {/*  MOBILE BOTTOM SHEET  */}
+      <AnimatePresence>
+        {openSheet && (
+          <>
+            {/* Overlay */}
+            <motion.div
+              className="fixed inset-0 bg-black/40 z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setOpenSheet(false)}
+            />
+
+            {/* Bottom Sheet */}
+            <motion.div
+              className="fixed bottom-0 left-0 w-full bg-white rounded-t-2xl p-5 z-50"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+            >
+              {/* Close */}
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-lg">Account</h3>
+                <X onClick={() => setOpenSheet(false)} />
+              </div>
+
+              {user ? (
+                <>
+                  {/* User Info */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <Avatar>
+                      <AvatarImage src={user?.profile?.profilePicture} />
+                      <AvatarFallback>CN</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold">{user?.fullname}</p>
+                      <p className="text-sm text-gray-500">
+                        {user?.profile?.bio || "No bio"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <Link
+                    to="/profile"
+                    onClick={() => setOpenSheet(false)}
+                    className="flex items-center gap-2 p-3 rounded-lg hover:bg-gray-100"
+                  >
+                    <User2 size={18} />
+                    Profile
+                  </Link>
+
+                  <button
+                    onClick={logoutHandler}
+                    className="flex items-center gap-2 p-3 rounded-lg text-red-500 hover:bg-red-50 w-full"
+                  >
+                    <LogOut size={18} />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link to="/login" className="block text-center p-3">
+                  Login
+                </Link>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 };
