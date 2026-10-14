@@ -4,7 +4,6 @@ import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
-import { setSearchCompanyByText } from '@/redux/CompanySlice'
 import AdminJobsTable from './AdminJobsTable'
 import useGetAllAdminJobs from '@/hooks/useGetAllAdminJobs'
 import { setSearchJobByText } from '@/redux/jobSlice'
@@ -17,7 +16,7 @@ function AdminJobs() {
     const navigate = useNavigate();
     useEffect(() =>{
         dispatch(setSearchJobByText(input));
-    },[input]);
+    },[input, dispatch]);
     return (
         <div>
             <Navbar />

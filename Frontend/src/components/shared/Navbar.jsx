@@ -11,17 +11,21 @@ import {
 import {
   Home,
   Briefcase,
+  Building2,
+  Plus,
   Search,
   User,
   LogOut,
   User2,
   X,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
 import { USER_API_END_POINT } from "@/Utils/constant";
 import { toast } from "sonner";
 import { setUser } from "@/redux/authslice";
+
+const MotionDiv = motion.div;
 
 const Navbar = () => {
   const { user } = useSelector((store) => store.auth);
@@ -31,7 +35,7 @@ const Navbar = () => {
 
   const [openSheet, setOpenSheet] = useState(false);
 
-  const isActive = (path) => location.pathname.startsWith(path);
+  const isActive = (path) =>   path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
   const logoutHandler = async () => {
     try {
@@ -50,11 +54,17 @@ const Navbar = () => {
     }
   };
 
-  const navItems = [
-    { path: "/", label: "Home", icon: Home },
-    { path: "/jobs", label: "Jobs", icon: Briefcase },
-    { path: "/browse", label: "Browse", icon: Search },
-  ];
+  const navItems = user?.role === "recruiter"
+    ? [
+        { path: "/admin/jobs", label: "My Jobs", icon: Briefcase },
+        { path: "/admin/jobs/create", label: "Post Job", icon: Plus },
+        { path: "/admin/companies", label: "My Companies", icon: Building2 },
+      ]
+    : [
+        { path: "/", label: "Home", icon: Home },
+        { path: "/jobs", label: "Jobs", icon: Briefcase },
+        { path: "/browse", label: "Browse", icon: Search },
+      ];
 
   return (
     <>
@@ -158,7 +168,13 @@ const Navbar = () => {
         {navItems.map((item, i) => {
           const Icon = item.icon;
           return (
-            <Link key={i} to={item.path} className="flex flex-col items-center text-xs">
+            <Link
+              key={i}
+              to={item.path}
+              className={`flex flex-col items-center text-xs ${
+                isActive(item.path) ? "text-[#6A38C2]" : "text-gray-700"
+              }`}
+            >
               <Icon size={20} />
               {item.label}
             </Link>
@@ -190,7 +206,7 @@ const Navbar = () => {
         {openSheet && user && (
           <>
             {/* Overlay */}
-            <motion.div
+            <MotionDiv
               className="fixed inset-0 bg-black/40 z-50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -199,7 +215,7 @@ const Navbar = () => {
             />
 
             {/* Bottom Sheet */}
-            <motion.div
+            <MotionDiv
               className="fixed bottom-0 left-0 w-full bg-white rounded-t-2xl p-5 z-50"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
@@ -245,7 +261,7 @@ const Navbar = () => {
                 <LogOut size={18} />
                 Logout
               </button>
-            </motion.div>
+            </MotionDiv>
           </>
         )}
       </AnimatePresence>

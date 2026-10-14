@@ -18,21 +18,28 @@ const filterData = [
 ];
 
 const FilterCard = () => {
+  const [selectedValues, setSelectedValues] = useState({
+    Location: "",
+    Industry: "",
+    Salary: ""
+  });
+  const dispatch = useDispatch();
 
-  const [selectedValue, setSelectedValue] = useState("");
-  const dispatch = useDispatch(); 
-
-  const handleChange = (value) => {
-    setSelectedValue(value);
+  const handleChange = (title, value) => {
+    setSelectedValues((prev) => ({
+      ...prev,
+      [title]: value
+    }));
   };
 
   useEffect(() => {
-    dispatch(setSearchedQuery(selectedValue)); 
-  }, [selectedValue, dispatch]);
+    const activeFilters = Object.values(selectedValues).filter(Boolean);
+    const query = activeFilters.length > 0 ? activeFilters.join(" ") : "";
+    dispatch(setSearchedQuery(query));
+  }, [selectedValues, dispatch]);
 
   return (
     <div className="w-full p-4 border rounded-xl shadow-md bg-white sticky top-20 h-fit">
-
       <h1 className="font-bold text-lg mb-4">Filter Jobs</h1>
 
       {filterData.map((data, index) => (
@@ -41,30 +48,23 @@ const FilterCard = () => {
 
           {data.options.map((item, idx) => (
             <div key={idx} className="flex items-center space-x-2 mb-1">
-
               <input
                 type="radio"
                 name={data.title}
                 value={item}
-                checked={selectedValue === item}
-                onChange={() => handleChange(item)}
+                checked={selectedValues[data.title] === item}
+                onChange={() => handleChange(data.title, item)}
                 className="cursor-pointer"
                 id={`${data.title}-${idx}`}
               />
 
-              <label
-                htmlFor={`${data.title}-${idx}`}
-                className="cursor-pointer"
-              >
+              <label htmlFor={`${data.title}-${idx}`} className="cursor-pointer">
                 {item}
               </label>
-
             </div>
           ))}
-
         </div>
       ))}
-
     </div>
   );
 };

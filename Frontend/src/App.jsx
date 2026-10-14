@@ -31,52 +31,63 @@ const appRouter = createBrowserRouter([
   {
     path: '/signup',
     element: <Signup />
-  }, {
+  },
+  {
     path: '/jobs',
     element: <Jobs />
-  }, {
-    path: "/description/:id",
+  },
+  {
+    path: '/description/:id',
     element: <JobDescription />
-
-  }, {
-    path: "/Browse",
+  },
+  {
+    path: '/browse',
     element: <Browse />
-  }, {
+  },
+  {
+    path: '/Browse',
+    element: <Browse />
+  },
+  {
     path: '/profile',
     element: <Profile />
   },
   {
-    path:"/About",
-    element:<About/>
+    path: '/about',
+    element: <About />
   },
-  // admin 
   {
-    path: "/admin/companies",
-    element: <ProtechtedRoute> <Companies /></ProtechtedRoute> 
-  },{
-    path: "/admin/companies/create",
-    element:<CompanyCreate/>
-  },{
-    path:"/admin/companies/:id",
-    element:<CompanySetup/>
-  },{
-    path:"/admin/jobs",
-    element:<AdminJobs/>
-  },{
-    path:"/admin/jobs/create",
-    element:<PostJob/>
-  },{
-    path:"/admin/jobs/edit/:id",
-    element:<AdminJobsEdit/>
-
+    path: '/About',
+    element: <About />
   },
-  
   {
-    path:"/admin/jobs/:id/applicants",
-    element:<Applicans/>
+    path: '/admin/companies',
+    element: <ProtechtedRoute><Companies /></ProtechtedRoute>
+  },
+  {
+    path: '/admin/companies/create',
+    element: <ProtechtedRoute><CompanyCreate /></ProtechtedRoute>
+  },
+  {
+    path: '/admin/companies/:id',
+    element: <ProtechtedRoute><CompanySetup /></ProtechtedRoute>
+  },
+  {
+    path: '/admin/jobs',
+    element: <ProtechtedRoute><AdminJobs /></ProtechtedRoute>
+  },
+  {
+    path: '/admin/jobs/create',
+    element: <ProtechtedRoute><PostJob /></ProtechtedRoute>
+  },
+  {
+    path: '/admin/jobs/edit/:id',
+    element: <ProtechtedRoute><AdminJobsEdit /></ProtechtedRoute>
+  },
+  {
+    path: '/admin/jobs/:id/applicants',
+    element: <ProtechtedRoute><Applicans /></ProtechtedRoute>
   }
-
-
 ])
 
 

@@ -1,12 +1,25 @@
 import { useNavigate } from "react-router-dom";
 import { Badge } from "./ui/badge";
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
 
 const LatestJobCard = ({ job }) => {
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+
+  const openJob = () => {
+    if (!user?._id) {
+      toast.error("Please sign up or log in to view job details.");
+      navigate("/signup");
+      return;
+    }
+
+    navigate(`/description/${job._id}`);
+  };
 
   return (
     <div
-      onClick={() => navigate(`/description/${job._id}`)}
+      onClick={openJob}
       className="w-full max-w-xl mx-auto 
                  p-4 sm:p-5 
                  rounded-xl 

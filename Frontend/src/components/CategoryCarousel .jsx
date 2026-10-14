@@ -19,28 +19,21 @@ const CategoryCarousel = () => {
 
   const searchJobHandler = (query) => {
     dispatch(setSearchedQuery(query));
-    navigate("/Browse")
-
-  }
+    navigate("/browse");
+  };
 
   return (
     <div className="flex items-center justify-center gap-4 my-10 flex-wrap">
-
-
-      {
-        category.map((item, index) => (
-          <Button
-            key={index}
-
-            onClick= {() => searchJobHandler(item)}
-            variant="outline"
-            className="rounded-full hover:bg-[#6A38C2] hover:text-white"
-          >
-            {item}
-          </Button>
-        ))
-      }
-
+      {category.map((item, index) => (
+        <Button
+          key={index}
+          onClick={() => searchJobHandler(item)}
+          variant="outline"
+          className="rounded-full hover:bg-[#6A38C2] hover:text-white"
+        >
+          {item}
+        </Button>
+      ))}
     </div>
   );
 };

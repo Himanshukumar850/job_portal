@@ -1,45 +1,51 @@
+import mongoose from "mongoose";
 import Application from "../models/Application.model.js";
 import Job from "../models/job.model.js";
-
 
 // APPLY JOB
 export const applyJob = async (req, res) => {
   try {
-
     const userId = req.id;
     const jobId = req.params.id;
 
-    if (!jobId) {
+    if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) {
       return res.status(400).json({
-        message: "Job id is required",
-        success: false
+        message: "Valid Job ID is required",
+        success: false,
+      });
+    }
+
+    // Role check: Only students/candidates can apply
+    if (req.user?.role === "recruiter") {
+      return res.status(403).json({
+        message: "Recruiters are not allowed to apply for jobs",
+        success: false,
       });
     }
 
     const existingApplication = await Application.findOne({
       job: jobId,
-      applicant: userId
+      applicant: userId,
     });
 
     if (existingApplication) {
       return res.status(400).json({
         message: "You have already applied for this job",
-        success: false
+        success: false,
       });
     }
 
     const job = await Job.findById(jobId);
-
     if (!job) {
       return res.status(404).json({
         message: "Job not found",
-        success: false
+        success: false,
       });
     }
 
     const newApplication = await Application.create({
       job: jobId,
-      applicant: userId
+      applicant: userId,
     });
 
     job.applications.push(newApplication._id);
@@ -48,20 +54,20 @@ export const applyJob = async (req, res) => {
     return res.status(201).json({
       message: "Applied successfully",
       success: true,
-      application: newApplication
+      application: newApplication,
     });
-
   } catch (error) {
-    console.log(error);
+    console.error("Apply Job Error:", error);
+    return res.status(500).json({
+      message: error.message || "Failed to apply for job",
+      success: false,
+    });
   }
 };
-
-
 
 // GET APPLIED JOBS (Candidate)
 export const getAppliedJobs = async (req, res) => {
   try {
-
     const userId = req.id;
 
     const applications = await Application.find({ applicant: userId })
@@ -69,86 +75,121 @@ export const getAppliedJobs = async (req, res) => {
       .populate({
         path: "job",
         populate: {
-          path: "company"
-        }
+          path: "company",
+        },
       });
 
     return res.status(200).json({
       applications,
-      success: true
+      success: true,
     });
-
   } catch (error) {
-    console.log(error);
+    console.error("Get Applied Jobs Error:", error);
+    return res.status(500).json({
+      message: error.message || "Failed to fetch applied jobs",
+      success: false,
+    });
   }
 };
 
-
-
-// GET APPLICANTS (Recruiter)
+// GET APPLICANTS (Recruiter - IDOR Protected)
 export const getApplicants = async (req, res) => {
   try {
-
     const jobId = req.params.id;
+
+    if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({
+        message: "Valid Job ID format is required",
+        success: false,
+      });
+    }
 
     const job = await Job.findById(jobId).populate({
       path: "applications",
       populate: {
-        path: "applicant"
-      }
+        path: "applicant",
+        select: "-password",
+      },
     });
 
     if (!job) {
       return res.status(404).json({
         message: "Job not found",
-        success: false
+        success: false,
+      });
+    }
+
+    // IDOR Check: Only the recruiter who created this job can see applicants
+    if (job.created_by.toString() !== req.id) {
+      return res.status(403).json({
+        message: "You are not authorized to view applicants for this job",
+        success: false,
       });
     }
 
     return res.status(200).json({
       job,
-      success: true
+      success: true,
     });
-
   } catch (error) {
-    console.log(error);
+    console.error("Get Applicants Error:", error);
+    return res.status(500).json({
+      message: error.message || "Failed to fetch applicants",
+      success: false,
+    });
   }
 };
 
-
-
-// UPDATE APPLICATION STATUS
+// UPDATE APPLICATION STATUS (IDOR Protected)
 export const updateStatus = async (req, res) => {
   try {
-
     const { status } = req.body;
     const applicationId = req.params.id;
 
-    if (!status) {
+    if (!applicationId || !mongoose.Types.ObjectId.isValid(applicationId)) {
       return res.status(400).json({
-        message: "Status is required",
-        success: false
+        message: "Valid Application ID is required",
+        success: false,
       });
     }
 
-    const application = await Application.findById(applicationId);
+    const validStatuses = ["pending", "accepted", "rejected"];
+    if (!status || !validStatuses.includes(status.toLowerCase().trim())) {
+      return res.status(400).json({
+        message: "Valid status is required ('pending', 'accepted', or 'rejected')",
+        success: false,
+      });
+    }
+
+    const application = await Application.findById(applicationId).populate("job");
 
     if (!application) {
       return res.status(404).json({
         message: "Application not found",
-        success: false
+        success: false,
       });
     }
 
-    application.status = status.toLowerCase();
+    // IDOR Check: Only the recruiter who created the job can update the candidate's status
+    if (application.job.created_by.toString() !== req.id) {
+      return res.status(403).json({
+        message: "You are not authorized to update the status of this application",
+        success: false,
+      });
+    }
+
+    application.status = status.toLowerCase().trim();
     await application.save();
 
     return res.status(200).json({
       message: "Status updated successfully",
-      success: true
+      success: true,
     });
-
   } catch (error) {
-    console.log(error);
+    console.error("Update Status Error:", error);
+    return res.status(500).json({
+      message: error.message || "Failed to update application status",
+      success: false,
+    });
   }
 };

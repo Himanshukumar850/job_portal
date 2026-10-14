@@ -38,8 +38,17 @@ const UpdateProfileDialog = ({ open, setopen }) => {
         }
     }, [user, open]); // open par bhi trigger hoga taaki data refresh ho
 
+    const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const PHONE_REGEX = /^[6-9]\d{9}$/;
+
     const changeHandler = (e) => {
-        setInput({ ...input, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        if (name === "phoneNumber") {
+            const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+            setInput((prev) => ({ ...prev, phoneNumber: digitsOnly }));
+            return;
+        }
+        setInput((prev) => ({ ...prev, [name]: value }));
     };
 
     const fileChangeHandler = (e) => {
@@ -48,12 +57,23 @@ const UpdateProfileDialog = ({ open, setopen }) => {
 
     const submitHandler = async (e) => {
         e.preventDefault();
+
+        if (input.email && !EMAIL_REGEX.test(input.email.trim())) {
+            toast.error("Please enter a valid email address");
+            return;
+        }
+
+        if (input.phoneNumber && !PHONE_REGEX.test(input.phoneNumber.trim())) {
+            toast.error("Please enter a valid 10-digit phone number (starts with 6-9)");
+            return;
+        }
+
         setLoading(true);
 
         const formData = new FormData();
         formData.append("fullname", input.fullname);
-        formData.append("email", input.email);
-        formData.append("phoneNumber", input.phoneNumber);
+        formData.append("email", input.email.trim().toLowerCase());
+        formData.append("phoneNumber", input.phoneNumber.trim());
         formData.append("bio", input.bio);
         formData.append("skills", input.skills);
         
@@ -99,7 +119,7 @@ const UpdateProfileDialog = ({ open, setopen }) => {
                     </div>
                     <div>
                         <Label>Phone</Label>
-                        <Input name="phoneNumber" value={input.phoneNumber} onChange={changeHandler} />
+                        <Input type="tel" maxLength={10} placeholder="10-digit mobile number" name="phoneNumber" value={input.phoneNumber} onChange={changeHandler} />
                     </div>
                     <div>
                         <Label>Bio</Label>

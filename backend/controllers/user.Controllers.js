@@ -1,67 +1,15 @@
 import User from "../models/user.models.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import getDataUri from "../utils/datauriData.js";
 import cloudinary from "../utils/Cloudinary.js";
 import fs from "fs";
 
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const PHONE_REGEX = /^(?:\+91|0)?[6-9]\d{9}$/;
 
-//  REGISTER 
-// export const register = async (req, res) => {
-//   try {
-
-//     const { fullname, email, phoneNumber, password, role } = req.body;
-
-//     if (!fullname || !email || !phoneNumber || !password || !role) {
-//       return res.status(400).json({
-//         message: "All fields are required",
-//         success: false,
-//       });
-//     }
-//     const file = req.file;
-//     const fileUri = getDataUri(file);
-//     const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-
-
-//     // Check if user already exists
-//     const existingUser = await User.findOne({ email });
-//     if (existingUser) {
-//       return res.status(400).json({
-//         message: "User already exists with this email",
-//         success: false,
-//       });
-//     }
-
-//     // Hash password
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     // Create user
-//     await User.create({
-//       fullname,
-//       email,
-//       phoneNumber,
-//       password: hashedPassword,
-//       role,
-//       profile:{
-//         profilePicture:cloudResponse.secure_url, 
-//       }
-//     });
-
-//     return res.status(201).json({
-//       message: "Account created successfully",
-//       success: true,
-//     });
-
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({
-//       message: "Server error",
-//       success: false,
-//     });
-//   }
-// };
-
+// REGISTER
 export const register = async (req, res) => {
+  const uploadedFilePath = req.file ? req.file.path : null;
   try {
     const { fullname, email, phoneNumber, password, role } = req.body;
 
@@ -72,33 +20,51 @@ export const register = async (req, res) => {
       });
     }
 
-    const file = req.file;
+    const normalizedEmail = email.toLowerCase().trim();
 
-    let profilePicture = ""; 
-
-    if (file) {
-      const cloudResponse = await cloudinary.uploader.upload(file.path); 
-      profilePicture = cloudResponse.secure_url;
-    }
-
-
-    // Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    // Email validation
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
       return res.status(400).json({
-        message: "User already exists",
+        message: "Please enter a valid email address",
         success: false,
       });
     }
 
-  
+    // Phone number validation (Indian 10-digit mobile number)
+    const cleanPhone = String(phoneNumber).trim().replace(/[\s-]/g, "");
+    if (!PHONE_REGEX.test(cleanPhone)) {
+      return res.status(400).json({
+        message: "Please enter a valid 10-digit phone number (starts with 6-9)",
+        success: false,
+      });
+    }
+    const formattedPhoneNumber = cleanPhone.replace(/^(?:\+91|0)/, "");
+
+    // Check if user exists FIRST before uploading to Cloudinary
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User already exists with this email",
+        success: false,
+      });
+    }
+
+    let profilePicture = "";
+
+    // Upload only if user does not exist
+    if (req.file) {
+      const cloudResponse = await cloudinary.uploader.upload(req.file.path, {
+        folder: "profile_pictures",
+      });
+      profilePicture = cloudResponse.secure_url;
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
-    await User.create({
-      fullname,
-      email,
-      phoneNumber,
+    const user = await User.create({
+      fullname: fullname.trim(),
+      email: normalizedEmail,
+      phoneNumber: formattedPhoneNumber,
       password: hashedPassword,
       role,
       profile: {
@@ -106,27 +72,59 @@ export const register = async (req, res) => {
       },
     });
 
-    return res.status(201).json({
-      message: "Account created successfully",
-      success: true,
-    });
+    // Generate JWT token directly on signup (no re-login required)
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.SECRET_KEY,
+      { expiresIn: "1d" }
+    );
 
+    const userData = {
+      _id: user._id,
+      fullname: user.fullname,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      profile: user.profile,
+    };
+
+    const isProduction = process.env.NODE_ENV === "production";
+
+    return res
+      .status(201)
+      .cookie("token", token, {
+        maxAge: 1 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        sameSite: isProduction ? "none" : "lax",
+        secure: isProduction,
+      })
+      .json({
+        message: "Account created successfully",
+        user: userData,
+        token,
+        success: true,
+      });
   } catch (error) {
-    console.log(error);
+    console.error("Register Error:", error);
     return res.status(500).json({
-      message: "Server error",
+      message: error.message || "Server error",
       success: false,
     });
+  } finally {
+    // Clean up temporary local file from uploads/
+    if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
+      try {
+        fs.unlinkSync(uploadedFilePath);
+      } catch (unlinkErr) {
+        console.error("File cleanup error in register:", unlinkErr);
+      }
+    }
   }
 };
 
-
-
-//  LOGIN 
+// LOGIN
 export const login = async (req, res) => {
   try {
-
-
     const { email, password, role } = req.body;
 
     if (!email || !password || !role) {
@@ -136,7 +134,15 @@ export const login = async (req, res) => {
       });
     }
 
-    let user = await User.findOne({ email });
+    const normalizedEmail = email.toLowerCase().trim();
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      return res.status(400).json({
+        message: "Please enter a valid email address",
+        success: false,
+      });
+    }
+
+    let user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(400).json({
         message: "Incorrect email or password",
@@ -191,19 +197,16 @@ export const login = async (req, res) => {
         user: userData,
         success: true,
       });
-
   } catch (error) {
-    console.log(error);
+    console.error("Login Error:", error);
     return res.status(500).json({
-      message: "Server error",
+      message: error.message || "Server error",
       success: false,
     });
   }
 };
 
-
-
-// ================= LOGOUT =================
+// LOGOUT
 export const logout = async (req, res) => {
   try {
     const isProduction = process.env.NODE_ENV === "production";
@@ -220,18 +223,17 @@ export const logout = async (req, res) => {
         success: true,
       });
   } catch (error) {
-    console.log(error);
+    console.error("Logout Error:", error);
     return res.status(500).json({
-      message: "Server error",
+      message: error.message || "Server error",
       success: false,
     });
   }
 };
 
-
-
-// ================= UPDATE PROFILE =================
+// UPDATE PROFILE (NO PASSWORD LEAK & SAFE FILE CLEANUP)
 export const updateProfile = async (req, res) => {
+  const uploadedFilePath = req.file ? req.file.path : null;
   try {
     const { fullname, phoneNumber, email, bio, skills } = req.body;
     const userId = req.id;
@@ -245,61 +247,106 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    
+    // Check if new email is valid and not already taken by another user
+    if (email) {
+      const normalizedEmail = email.toLowerCase().trim();
+      if (!EMAIL_REGEX.test(normalizedEmail)) {
+        return res.status(400).json({
+          message: "Please enter a valid email address",
+          success: false,
+        });
+      }
 
+      if (normalizedEmail !== user.email) {
+        const existingEmail = await User.findOne({
+          email: normalizedEmail,
+          _id: { $ne: userId },
+        });
+        if (existingEmail) {
+          return res.status(400).json({
+            message: "Email is already in use by another account",
+            success: false,
+          });
+        }
+        user.email = normalizedEmail;
+      }
+    }
 
-    let cloudResponse;
-
+    // File upload
     if (req.file) {
-      cloudResponse = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: "auto",
-        folder: "resumes"
+      const isDocument =
+        req.file.mimetype.includes("pdf") ||
+        req.file.mimetype.includes("document") ||
+        req.file.mimetype.includes("msword");
+
+      const cloudResponse = await cloudinary.uploader.upload(req.file.path, {
+        resource_type: isDocument ? "raw" : "auto",
+        folder: isDocument ? "resumes" : "profile_pictures",
       });
 
-      fs.unlinkSync(req.file.path); // 🧹 local file delete
+      if (!user.profile) {
+        user.profile = {};
+      }
+
+      if (isDocument) {
+        user.profile.resume = cloudResponse.secure_url;
+        user.profile.resumeOrignalName = req.file.originalname;
+      } else {
+        user.profile.profilePicture = cloudResponse.secure_url;
+      }
     }
 
-
-
-
-    // skills
-    let skillsArray;
-    if (skills) {
-      skillsArray = skills.split(",");
+    // Skills handling
+    if (skills !== undefined) {
+      const skillsArray = Array.isArray(skills)
+        ? skills
+        : skills.split(",").map((s) => s.trim()).filter(Boolean);
+      if (!user.profile) user.profile = {};
+      user.profile.skills = skillsArray;
     }
 
-    // update fields
-    if (fullname) user.fullname = fullname;
-    if (email) user.email = email;
-    if (phoneNumber) user.phoneNumber = phoneNumber;
-
-    if (!user.profile) {
-      user.profile = {}; 
+    // Update other fields
+    if (fullname && fullname.trim()) user.fullname = fullname.trim();
+    if (phoneNumber) {
+      const cleanPhone = String(phoneNumber).trim().replace(/[\s-]/g, "");
+      if (!PHONE_REGEX.test(cleanPhone)) {
+        return res.status(400).json({
+          message: "Please enter a valid 10-digit phone number (starts with 6-9)",
+          success: false,
+        });
+      }
+      user.phoneNumber = cleanPhone.replace(/^(?:\+91|0)/, "");
     }
-
-    if (bio) user.profile.bio = bio;
-    if (skills) user.profile.skills = skillsArray;
-
-    // resume
-    if (cloudResponse) {
-      user.profile.resume = cloudResponse.secure_url;
-      user.profile.resumeOrignalName = req.file.originalname;
+    if (bio !== undefined) {
+      if (!user.profile) user.profile = {};
+      user.profile.bio = bio;
     }
 
     await user.save();
 
+    // Security: exclude password from JSON response
+    const sanitizedUser = user.toObject();
+    delete sanitizedUser.password;
+
     return res.status(200).json({
       message: "Profile updated successfully",
-      user,
+      user: sanitizedUser,
       success: true,
     });
-
   } catch (error) {
-    console.log("ERROR:", error);
+    console.error("Update Profile Error:", error);
     return res.status(500).json({
-      message: error.message,
+      message: error.message || "Server error",
       success: false,
     });
+  } finally {
+    // Always clean up local uploaded file from disk
+    if (uploadedFilePath && fs.existsSync(uploadedFilePath)) {
+      try {
+        fs.unlinkSync(uploadedFilePath);
+      } catch (unlinkErr) {
+        console.error("File cleanup error in updateProfile:", unlinkErr);
+      }
+    }
   }
 };
-

@@ -2,22 +2,28 @@ import React, { useEffect } from 'react'
 import Navbar from './shared/Navbar'
 import Job from './Job';
 import { useDispatch, useSelector } from 'react-redux';
-import store from '@/redux/store';
 import { setSearchedQuery } from '@/redux/jobSlice';
 import useGetAllJobs from '@/hooks/useGetAllJobs';
+import { Navigate } from 'react-router-dom';
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+
+const MotionDiv = motion.div;
 
 const Browse = () => {
     useGetAllJobs();
-    const { allJobs } = useSelector(store => store.job);
+    const { allJobs } = useSelector((store) => store.job);
+    const { user } = useSelector((store) => store.auth);
     const dispatch = useDispatch();
     useEffect(() => {
         return () => {
             dispatch(setSearchedQuery(""));
-
         }
-    }, [])
+    }, [dispatch])
+
+    if (user?.role === "recruiter") {
+        return <Navigate to="/admin/jobs" replace />;
+    }
 
     return (
         <div >
@@ -28,7 +34,7 @@ const Browse = () => {
                     {
                         <AnimatePresence>
                             {allJobs.map((job, index) => (
-                                <motion.div
+                                <MotionDiv
                                     key={job._id}
                                     initial={{ opacity: 0, y: 40 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -37,7 +43,7 @@ const Browse = () => {
                                     whileHover={{ scale: 1.03 }}
                                 >
                                     <Job job={job} />
-                                </motion.div>
+                                </MotionDiv>
                             ))}
                         </AnimatePresence>
                     }

@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { JOB_API_END_POINT, APPLICATION_API_END_POINT } from '@/Utils/constant';
 import { setSingleJob } from '@/redux/jobSlice';
@@ -27,8 +27,8 @@ function JobDescription() {
         try {
             
             if (!user?._id) {
-                toast.error("Please login to apply");
-                navigate("/login");
+                toast.error("You must sign up and log in before applying for a job.");
+                navigate("/signup");
                 return;
             }
             
@@ -81,6 +81,8 @@ function JobDescription() {
 
    
     useEffect(() => {
+        if (user?.role === 'recruiter') return;
+
         const fetchSingleJob = async () => {
             try {
                 setJobLoading(true);
@@ -112,7 +114,7 @@ function JobDescription() {
             fetchSingleJob();
         }
 
-    }, [dispatch, JobId]);
+    }, [dispatch, JobId, user?.role]);
 
     
     useEffect(() => {
@@ -128,6 +130,10 @@ function JobDescription() {
     }, [singleJob, user]);
 
     
+    if (user?.role === 'recruiter') {
+        return <Navigate to="/admin/jobs" replace />;
+    }
+
     if (jobLoading) {
         return (
             <div className="max-w-7xl mx-auto my-10">
@@ -176,7 +182,7 @@ function JobDescription() {
                 
                 <Button
                     onClick={applyjobHandler}
-                    disabled={isApplied || loading || !user}  
+                    disabled={isApplied || loading}
                     className={`rounded-lg px-6 ${
                         isApplied
                             ? 'bg-gray-600 cursor-not-allowed'
@@ -259,4 +265,3 @@ function JobDescription() {
 }
 
 export default JobDescription;
-

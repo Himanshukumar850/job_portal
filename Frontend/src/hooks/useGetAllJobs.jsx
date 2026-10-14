@@ -9,7 +9,10 @@ import { JOB_API_END_POINT } from '@/Utils/constant'
 function useGetAllJobs() {
     const dispatch = useDispatch();
     const {searchedQuery} = useSelector(store =>store.job);  
+    const { user } = useSelector(store => store.auth);
     useEffect(() => {
+        if (user?.role === "recruiter") return;
+
         const fetchAllJobs = async () => {
             try {
                 const res = await axios.get(`${JOB_API_END_POINT}/get?keyword=${searchedQuery}`, {
@@ -31,7 +34,7 @@ function useGetAllJobs() {
         
         fetchAllJobs();
         
-    }, [dispatch, searchedQuery]);  
+    }, [dispatch, searchedQuery, user?.role]);  
     
     return null;  
 }

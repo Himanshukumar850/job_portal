@@ -12,21 +12,27 @@ import {
 
 import * as Popover from "@radix-ui/react-popover"
 import { MoreHorizontal } from 'lucide-react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'sonner'
 import axios from 'axios'
 import { APPLICATION_API_END_POINT } from '@/Utils/constant'
+import { setApplicantStatus } from '@/redux/applicationSliice'
 
 const shortlistingStatus = ["Accepted", "Rejected"]
 
 function ApplicantsTable() {
     const { applicants } = useSelector(store => store.application);
+    const dispatch = useDispatch();
     const statusHandler = async (status,id) =>{
         try {
             const res = await axios.post(`${APPLICATION_API_END_POINT}/status/${id}/update`,{status},{
                 withCredentials:true 
             });
             if (res.data.success){
+                dispatch(setApplicantStatus({
+                    applicationId: id,
+                    status: status.toLowerCase(),
+                }));
                 toast.success(res.data.message);
             }
 
@@ -49,6 +55,7 @@ function ApplicantsTable() {
                         <TableHead>Contact</TableHead>
                         <TableHead>Resume</TableHead>
                         <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead className='text-right'>Action</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -57,8 +64,8 @@ function ApplicantsTable() {
                 <TableBody>
                     {
                         applicants?.length > 0 ? (
-                            applicants.map((item, index) => (
-                                <TableRow key={index}>
+                            applicants.map((item) => (
+                                <TableRow key={item?._id}>
 
                                     <TableCell>{item?.applicant?.fullname}</TableCell>
                                     <TableCell>{item?.applicant?.email}</TableCell>
@@ -73,6 +80,7 @@ function ApplicantsTable() {
                                     </TableCell>
 
                                     <TableCell>{item?.createdAt?.split("T")[0]}</TableCell>
+                                    <TableCell className="capitalize">{item?.status || "pending"}</TableCell>
 
                                     <TableCell className='text-right'>
                                         <Popover.Root>
@@ -101,7 +109,7 @@ function ApplicantsTable() {
                             ))
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center">
+                                <TableCell colSpan={7} className="text-center">
                                     No Applicants Found
                                 </TableCell>
                             </TableRow>

@@ -1,4 +1,3 @@
-import Companies from "@/components/admin/Companies";
 import { createSlice } from "@reduxjs/toolkit";
 
 const companySlice = createSlice({

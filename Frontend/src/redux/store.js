@@ -5,7 +5,6 @@ import companyReducer from "./CompanySlice";
 import applicationSlice from "./applicationSliice";
 
 import {
-  persistStore,
   persistReducer,
   FLUSH,
   REHYDRATE,

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useMemo } from "react";
 import {
     Table,
     TableHeader,
@@ -15,32 +15,21 @@ import {
     PopoverTrigger,
     PopoverContent,
 } from "@/components/ui/popover";
-import { MoreHorizontal, Edit2, Trash2 } from "lucide-react";
-import { useSelector, useDispatch } from "react-redux";
-import { useState } from "react";
-import { setSearchCompanyByText  } from "@/redux/CompanySlice";
+import { MoreHorizontal, Edit2 } from "lucide-react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 function CompaniesTable() {
-    const dispatch = useDispatch();
-    
-    // Redux se data lao
     const { companies = [], searchCompanyByText = "" } = useSelector((store) => store.company);
-    const [filterCompany, setFilterCompany] = useState([]);
     const navigate = useNavigate();
 
-    // Jab companies ya search text change ho toh filter karo
-    useEffect(() => {
-        const filtered = companies.filter((company) => {
-            // Agar search text empty hai toh sab dikha do
-            if (!searchCompanyByText || searchCompanyByText.trim() === "") {
-                return true;
-            }
-            // Filter by name
-            return company.name.toLowerCase().includes(searchCompanyByText.toLowerCase());
+    const filterCompany = useMemo(() => {
+        const search = searchCompanyByText.trim().toLowerCase();
+
+        return companies.filter((company) => {
+            if (!search) return true;
+            return company?.name?.toLowerCase().includes(search);
         });
-        
-        setFilterCompany(filtered);
     }, [companies, searchCompanyByText]);
 
     return (

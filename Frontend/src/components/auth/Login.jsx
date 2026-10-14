@@ -32,12 +32,27 @@ const Login = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
+
+    if (!input.email || !input.password || !input.role) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(input.email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     try {
       dispatch(setLoading(true));
 
       const res = await axios.post(
         `${USER_API_END_POINT}/login`,
-        input,
+        {
+          ...input,
+          email: input.email.trim().toLowerCase(),
+        },
         {
           headers: {
             "Content-Type": "application/json"
@@ -61,7 +76,7 @@ const Login = () => {
 
   useEffect(() => {
     if (user) navigate("/");
-  }, [user]);
+  }, [navigate, user]);
 
   return (
     <div>

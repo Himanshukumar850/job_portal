@@ -8,8 +8,11 @@ import axios from "axios";
 import { toast } from "sonner";
 import { USER_API_END_POINT } from "../../Utils/constant";
 import { useDispatch, useSelector } from "react-redux";
-import { setLoading } from "@/redux/authslice";
+import { setLoading, setUser } from "@/redux/authslice";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const PHONE_REGEX = /^[6-9]\d{9}$/;
 
 const Signup = () => {
   const [input, setInput] = useState({
@@ -28,10 +31,20 @@ const Signup = () => {
   const navigate = useNavigate();
 
   const changeEventHandler = (e) => {
-    setInput({
-      ...input,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    if (name === "phoneNumber") {
+      // Only digits allowed, max 10 digits
+      const digitsOnly = value.replace(/\D/g, "").slice(0, 10);
+      setInput((prev) => ({
+        ...prev,
+        phoneNumber: digitsOnly,
+      }));
+      return;
+    }
+    setInput((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const changeFileHandler = (e) => {
@@ -44,11 +57,26 @@ const Signup = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
 
+    if (!input.fullname || !input.email || !input.phoneNumber || !input.password || !input.role) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(input.email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (!PHONE_REGEX.test(input.phoneNumber.trim())) {
+      toast.error("Please enter a valid 10-digit phone number (starts with 6, 7, 8, or 9)");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("fullname", input.fullname);
-    formData.append("email", input.email);
+    formData.append("fullname", input.fullname.trim());
+    formData.append("email", input.email.trim().toLowerCase());
     formData.append("password", input.password);
-    formData.append("phoneNumber", input.phoneNumber);
+    formData.append("phoneNumber", input.phoneNumber.trim());
     formData.append("role", input.role);
 
     if (input.file) {
@@ -70,8 +98,10 @@ const Signup = () => {
       );
 
       if (res.data.success) {
-        toast.success(res.data.message);
-        navigate("/login");
+        // Automatically log in the user with the token & user details returned from backend
+        dispatch(setUser(res.data.user));
+        toast.success(res.data.message || "Account created successfully");
+        navigate("/");
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Signup failed");
@@ -82,7 +112,7 @@ const Signup = () => {
 
   useEffect(() => {
     if (user) navigate("/");
-  }, [user]);
+  }, [navigate, user]);
 
   return (
     <div>
@@ -122,19 +152,31 @@ const Signup = () => {
               placeholder="Enter your email"
               className="mt-1 focus:ring-2 focus:ring-[#6A38C2]"
             />
+            {input.email && !EMAIL_REGEX.test(input.email.trim()) && (
+              <p className="text-xs text-red-500 mt-1">Please enter a valid email format</p>
+            )}
           </div>
 
           {/* Phone */}
           <div className="mb-4">
             <Label>Phone Number</Label>
             <Input
-              type="text"
+              type="tel"
               name="phoneNumber"
               value={input.phoneNumber}
               onChange={changeEventHandler}
-              placeholder="Enter your number"
+              placeholder="10-digit mobile number"
+              maxLength={10}
               className="mt-1 focus:ring-2 focus:ring-[#6A38C2]"
             />
+            {input.phoneNumber && input.phoneNumber.length > 0 && !/^[6-9]/.test(input.phoneNumber) && (
+              <p className="text-xs text-red-500 mt-1">Number must start with 6, 7, 8, or 9</p>
+            )}
+            {input.phoneNumber && input.phoneNumber.length > 0 && input.phoneNumber.length < 10 && (
+              <p className="text-xs text-amber-600 mt-1">
+                Enter 10 digits ({input.phoneNumber.length}/10)
+              </p>
+            )}
           </div>
 
           {/* Password with Toggle */}

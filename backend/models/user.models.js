@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
         required:true
     },
     phoneNumber:{
-        type:Number,
+        type:String,
         required:true
     },
     role:{
@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
         skills:[{type:String}],
         resume:{type:String},
         resumeOrignalName:{type:String},
-        company:{type:mongoose.Schema.Types.ObjectId,ref:'company' },
+        company:{type:mongoose.Schema.Types.ObjectId,ref:'Company' },
         profilePicture:{type:String,default:""},
     }, 
 

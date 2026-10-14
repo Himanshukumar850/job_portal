@@ -1,31 +1,36 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import Navbar from "./shared/Navbar";
 import Filter from "./Filter";
 import Job from "./Job";
-import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import { useSelector } from "react-redux";
+import { Navigate } from "react-router-dom";
+
+const MotionDiv = motion.div;
 
 const Jobs = () => {
-    const { allJobs = [], searchedQuery = "" } = useSelector(store => store?.job || {});
-    const [filteredJobs, setFilteredJobs] = useState(allJobs);
+    const { allJobs = [], searchedQuery = "" } = useSelector((store) => store?.job || {});
+    const { user } = useSelector((store) => store.auth);
 
-    useEffect(() => {
-        if (searchedQuery) {
-            const filterJobs = allJobs.filter((job) => {
-                return (
-                    job.title?.toLowerCase().includes(searchedQuery.toLowerCase()) ||
-                    job.description?.toLowerCase().includes(searchedQuery.toLowerCase()) ||
-                    job.location?.toLowerCase().includes(searchedQuery.toLowerCase()) ||
-                    job.salary?.toString().toLowerCase().includes(searchedQuery.toLowerCase())
-                );
-            });
+    const filteredJobs = useMemo(() => {
+        if (!searchedQuery) return allJobs;
 
-            setFilteredJobs(filterJobs);
-        } else {
-            setFilteredJobs(allJobs);
-        }
+        const query = searchedQuery.toLowerCase();
+
+        return allJobs.filter((job) => {
+            return (
+                job.title?.toLowerCase().includes(query) ||
+                job.description?.toLowerCase().includes(query) ||
+                job.location?.toLowerCase().includes(query) ||
+                job.salary?.toString().toLowerCase().includes(query)
+            );
+        });
     }, [allJobs, searchedQuery]);
+
+    if (user?.role === "recruiter") {
+        return <Navigate to="/admin/jobs" replace />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -51,14 +56,14 @@ const Jobs = () => {
                             <div className="h-[88vh] overflow-y-auto pr-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {filteredJobs.map((job) => (
-                                        <motion.div 
+                                        <MotionDiv
                                         initial={{opacity:0,x:100}}
                                         animate={{opacity:1,x:0}}
                                         exit={{opacity:0, x:-100}}
                                         transition={{duration:0.3}}
                                         key={job._id}>
                                             <Job job={job} />
-                                        </motion.div>
+                                        </MotionDiv>
                                     ))}
                                 </div>
                             </div>

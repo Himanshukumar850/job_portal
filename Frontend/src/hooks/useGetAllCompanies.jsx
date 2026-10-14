@@ -17,22 +17,19 @@ function UseGetAllCompanies() {
                     withCredentials: true
                 });
 
-                
                 if (res.data.success) {
-
                     dispatch(setCompanies(res.data.companies));
                 } else {
                     console.warn(" Success is false");
                 }
             } catch (error) {
-
                 console.error("Full error:", error);
             }
         };
 
         fetchCompanies();
 
-    }, []);  
+    }, [dispatch]);  
 
     return null;  
 }

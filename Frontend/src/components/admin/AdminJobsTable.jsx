@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import {
   Table,
   TableHeader,
@@ -19,7 +19,6 @@ import {
 import { MoreHorizontal, Edit2, Eye } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { setSearchJobByText } from "@/redux/jobSlice";
 
 function AdminJobsTable() {
   const navigate = useNavigate();
@@ -27,18 +26,11 @@ function AdminJobsTable() {
   const { allAdminJobs = [], searchJobByText = "" } = useSelector(
     (store) => store.job
   );
-  console.log("ALL JOBS:", allAdminJobs);
-  console.log("SEARCH TEXT:", searchJobByText);
 
-
-  const [filterJobs, setFilterJobs] = useState([]);
-
-  //  SEARCH FILTER 
-  useEffect(() => {
+  const filterJobs = useMemo(() => {
     const search = searchJobByText.trim().toLowerCase();
 
-    const filtered = allAdminJobs.filter((job) => {
-      console.log("JOB:", job);
+    return allAdminJobs.filter((job) => {
       if (!search) return true;
 
       const title = job?.title?.toLowerCase() || "";
@@ -46,9 +38,6 @@ function AdminJobsTable() {
 
       return title.includes(search) || company.includes(search);
     });
-    console.log("FILTERED:", filtered);
-
-    setFilterJobs(filtered);
   }, [allAdminJobs, searchJobByText]);
 
   return (
@@ -62,6 +51,7 @@ function AdminJobsTable() {
             <TableHead>Company Name</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Date</TableHead>
+            <TableHead>Applicants</TableHead>
             <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
@@ -69,13 +59,13 @@ function AdminJobsTable() {
         <TableBody>
           {allAdminJobs.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8">
+              <TableCell colSpan={6} className="text-center py-8">
                 No jobs posted yet.
               </TableCell>
             </TableRow>
           ) : filterJobs.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8">
+              <TableCell colSpan={6} className="text-center py-8">
                 No jobs found matching your search.
               </TableCell>
             </TableRow>
@@ -106,6 +96,16 @@ function AdminJobsTable() {
                   {new Date(job?.createdAt).toLocaleDateString()}
                 </TableCell>
 
+                <TableCell>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/admin/jobs/${job._id}/applicants`)}
+                    className="text-[#6A38C2] hover:underline"
+                  >
+                    {job?.applications?.length || 0} · View
+                  </button>
+                </TableCell>
+
                 {/* ACTION */}
                 <TableCell className="text-right">
                   <Popover>
@@ -125,12 +125,14 @@ function AdminJobsTable() {
                         <Edit2 size={16} />
                         Edit
                       </button>
-                      <div onClick={() => navigate(`/admin/jobs/${job._id}/applicants`)} className="flex items-center w-fit gap-2 cursor-pointer mt-2">
-                        <Eye className="w-4 " />
-                        <span>Applicant </span>
-
-
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/admin/jobs/${job._id}/applicants`)}
+                        className="flex items-center w-full gap-2 p-2 hover:bg-gray-100"
+                      >
+                        <Eye className="w-4" />
+                        <span>View applicants</span>
+                      </button>
                     </PopoverContent>
                   </Popover>
                 </TableCell>

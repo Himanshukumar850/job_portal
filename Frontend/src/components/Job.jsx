@@ -10,15 +10,18 @@ import { useState } from "react";
 const Job = ({ job }) => {
     const navigate = useNavigate();
     const [isSaved, setIsSaved] = useState(false);
-    
+
     if (!job?._id) return <div className="p-5 text-gray-500">Job data unavailable</div>;
-    
+
     const getTimeAgo = (date) => {
         if (!date) return "Recently";
-        const days = Math.floor((Date.now() - new Date(date)) / (1000 * 60 * 60 * 24));
-        if (days === 0) return "Today";
-        if (days === 1) return "Yesterday";
-        return `${days} days ago`;
+        const now = new Date();
+        const jobDate = new Date(date);
+        const diffDays = Math.floor((now - jobDate) / (1000 * 60 * 60 * 24));
+        if (Number.isNaN(diffDays)) return "Recently";
+        if (diffDays === 0) return "Today";
+        if (diffDays === 1) return "Yesterday";
+        return `${diffDays} days ago`;
     };
     
     return (
