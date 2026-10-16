@@ -9,11 +9,17 @@ const applicationSlice = createSlice({
             state.applicants = action.payload;
         },
         setApplicantStatus:(state, action) =>{
-            const applicant = state.applicants.find(
-                (item) => item._id === action.payload.applicationId
-            );
-            if (applicant) {
-                applicant.status = action.payload.status;
+            const { applicationId, status, interviewDetails } = action.payload;
+            if (Array.isArray(state.applicants)) {
+                const applicant = state.applicants.find(
+                    (item) => item._id === applicationId
+                );
+                if (applicant) {
+                    applicant.status = status;
+                    if (interviewDetails !== undefined) {
+                        applicant.interviewDetails = interviewDetails;
+                    }
+                }
             }
         }
     }

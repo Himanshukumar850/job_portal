@@ -18,6 +18,7 @@ import {
   LogOut,
   User2,
   X,
+  Bookmark,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
@@ -147,6 +148,16 @@ const Navbar = () => {
                       View Profile
                     </Link>
 
+                    {user?.role !== "recruiter" && (
+                      <Link
+                        to="/saved-jobs"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700"
+                      >
+                        <Bookmark size={18} />
+                        Saved Jobs
+                      </Link>
+                    )}
+
                     <button
                       onClick={logoutHandler}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 w-full text-left"
@@ -253,6 +264,17 @@ const Navbar = () => {
                 <User2 size={18} />
                 Profile
               </Link>
+
+              {user?.role !== "recruiter" && (
+                <Link
+                  to="/saved-jobs"
+                  onClick={() => setOpenSheet(false)}
+                  className="flex items-center gap-2 p-3 rounded-lg hover:bg-gray-100 text-gray-700"
+                >
+                  <Bookmark size={18} />
+                  Saved Jobs
+                </Link>
+              )}
 
               <button
                 onClick={logoutHandler}

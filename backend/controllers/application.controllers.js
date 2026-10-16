@@ -46,6 +46,14 @@ export const applyJob = async (req, res) => {
     const newApplication = await Application.create({
       job: jobId,
       applicant: userId,
+      status: "applied",
+      statusHistory: [
+        {
+          status: "applied",
+          changedAt: new Date(),
+          notes: "Application submitted successfully",
+        },
+      ],
     });
 
     job.applications.push(newApplication._id);
@@ -140,10 +148,10 @@ export const getApplicants = async (req, res) => {
   }
 };
 
-// UPDATE APPLICATION STATUS (IDOR Protected)
+// UPDATE APPLICATION STATUS (IDOR Protected & Multi-Stage Pipeline)
 export const updateStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, interviewDate, interviewTime, meetingLink, roundName, notes } = req.body;
     const applicationId = req.params.id;
 
     if (!applicationId || !mongoose.Types.ObjectId.isValid(applicationId)) {
@@ -153,10 +161,20 @@ export const updateStatus = async (req, res) => {
       });
     }
 
-    const validStatuses = ["pending", "accepted", "rejected"];
-    if (!status || !validStatuses.includes(status.toLowerCase().trim())) {
+    const validStatuses = [
+      "pending",
+      "applied",
+      "under_review",
+      "shortlisted",
+      "interview_scheduled",
+      "accepted",
+      "rejected",
+    ];
+
+    const normalizedStatus = status ? status.toLowerCase().trim() : "";
+    if (!normalizedStatus || !validStatuses.includes(normalizedStatus)) {
       return res.status(400).json({
-        message: "Valid status is required ('pending', 'accepted', or 'rejected')",
+        message: `Valid status is required. Allowed values: ${validStatuses.join(", ")}`,
         success: false,
       });
     }
@@ -170,19 +188,52 @@ export const updateStatus = async (req, res) => {
       });
     }
 
-    // IDOR Check: Only the recruiter who created the job can update the candidate's status
-    if (application.job.created_by.toString() !== req.id) {
+    // IDOR Check: Only the recruiter who created the job can update candidate's status
+    if (!application.job || application.job.created_by.toString() !== req.id) {
       return res.status(403).json({
         message: "You are not authorized to update the status of this application",
         success: false,
       });
     }
 
-    application.status = status.toLowerCase().trim();
+    // Validation for interview scheduling
+    if (normalizedStatus === "interview_scheduled") {
+      if (!interviewDate || !meetingLink) {
+        return res.status(400).json({
+          message: "Interview date and meeting link are required to schedule an interview",
+          success: false,
+        });
+      }
+
+      application.interviewDetails = {
+        interviewDate: String(interviewDate).trim(),
+        interviewTime: interviewTime ? String(interviewTime).trim() : "TBD",
+        meetingLink: String(meetingLink).trim(),
+        roundName: roundName ? String(roundName).trim() : "Technical Interview",
+        notes: notes ? String(notes).trim() : "",
+      };
+    }
+
+    application.status = normalizedStatus;
+
+    if (!application.statusHistory) {
+      application.statusHistory = [];
+    }
+
+    application.statusHistory.push({
+      status: normalizedStatus,
+      changedAt: new Date(),
+      notes: notes || `Status updated to ${normalizedStatus.replace("_", " ")}`,
+    });
+
     await application.save();
 
     return res.status(200).json({
-      message: "Status updated successfully",
+      message:
+        normalizedStatus === "interview_scheduled"
+          ? "Interview scheduled successfully"
+          : `Application moved to ${normalizedStatus.replace("_", " ")}`,
+      application,
       success: true,
     });
   } catch (error) {

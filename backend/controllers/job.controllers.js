@@ -2,6 +2,7 @@
 import mongoose from "mongoose";
 import Job from "../models/job.model.js";
 import Company from "../models/company.js";
+import User from "../models/user.models.js";
 
 // CREATE JOB
 export const postjob = async (req, res) => {
@@ -274,6 +275,111 @@ export const updateJob = async (req, res) => {
     console.error("Update Job Error:", error);
     return res.status(500).json({
       message: error.message || "Failed to update job",
+      success: false,
+    });
+  }
+};
+
+// TOGGLE SAVE / UNSAVE JOB (BOOKMARK)
+export const saveOrUnsaveJob = async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const userId = req.id;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+      return res.status(400).json({
+        message: "Invalid Job ID",
+        success: false,
+      });
+    }
+
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({
+        message: "Job not found",
+        success: false,
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
+    if (!user.savedJobs) {
+      user.savedJobs = [];
+    }
+
+    const isAlreadySaved = user.savedJobs.some(
+      (id) => id.toString() === jobId.toString()
+    );
+
+    let message = "";
+    let isSaved = false;
+
+    if (isAlreadySaved) {
+      user.savedJobs = user.savedJobs.filter(
+        (id) => id.toString() !== jobId.toString()
+      );
+      message = "Job removed from saved jobs";
+      isSaved = false;
+    } else {
+      user.savedJobs.push(jobId);
+      message = "Job saved successfully";
+      isSaved = true;
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      message,
+      isSaved,
+      savedJobs: user.savedJobs,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Save Job Error:", error);
+    return res.status(500).json({
+      message: error.message || "Server error",
+      success: false,
+    });
+  }
+};
+
+// GET ALL SAVED JOBS FOR LOGGED-IN USER
+export const getSavedJobs = async (req, res) => {
+  try {
+    const userId = req.id;
+
+    const user = await User.findById(userId).populate({
+      path: "savedJobs",
+      populate: {
+        path: "company",
+      },
+      options: { sort: { createdAt: -1 } },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+        success: false,
+      });
+    }
+
+    // Filter out any deleted jobs
+    const validSavedJobs = (user.savedJobs || []).filter((job) => job !== null);
+
+    return res.status(200).json({
+      savedJobs: validSavedJobs,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Get Saved Jobs Error:", error);
+    return res.status(500).json({
+      message: error.message || "Server error",
       success: false,
     });
   }

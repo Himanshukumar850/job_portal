@@ -123,18 +123,46 @@ const UpdateProfileDialog = ({ open, setopen }) => {
                     </div>
                     <div>
                         <Label>Bio</Label>
-                        <Input name="bio" value={input.bio} onChange={changeHandler} />
+                        <Input
+                            name="bio"
+                            value={input.bio}
+                            onChange={changeHandler}
+                            placeholder={user?.role === "recruiter" ? "e.g. HR Manager / Lead Technical Recruiter" : "Tell us about yourself"}
+                        />
                     </div>
-                    <div>
-                        <Label>Skills</Label>
-                        <Input name="skills" value={input.skills} onChange={changeHandler} placeholder="React, Node, MongoDB" />
-                    </div>
-                    <div>
-                        <Label>Resume (PDF)</Label>
-                        <Input name="profile" type="file" accept="application/pdf" onChange={fileChangeHandler} />
-                    </div>
+
+                    {user?.role === "recruiter" ? (
+                        <div>
+                            <Label>Profile Picture (Image)</Label>
+                            <Input
+                                name="profile"
+                                type="file"
+                                accept="image/*"
+                                onChange={fileChangeHandler}
+                                className="mt-1 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-purple-50 file:text-[#6A38C2] hover:file:bg-purple-100 cursor-pointer"
+                            />
+                        </div>
+                    ) : (
+                        <>
+                            <div>
+                                <Label>Skills (Comma-separated)</Label>
+                                <Input name="skills" value={input.skills} onChange={changeHandler} placeholder="React, Node.js, MongoDB" />
+                            </div>
+                            <div>
+                                <Label>Resume (PDF)</Label>
+                                <Input
+                                    name="profile"
+                                    type="file"
+                                    accept="application/pdf,image/*"
+                                    onChange={fileChangeHandler}
+                                    className="mt-1 file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:bg-purple-50 file:text-[#6A38C2] hover:file:bg-purple-100 cursor-pointer"
+                                />
+                            </div>
+                        </>
+                    )}
+
                     <Button type="submit" disabled={loading} className="w-full bg-[#6A38C2] text-white hover:bg-[#5b30a6]">
-                        {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait</> : "Update"}
+                        {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait</> : "Save Changes"}
                     </Button>
                 </form>
             </DialogContent>

@@ -17,9 +17,33 @@ const applicationSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ["pending", "accepted", "rejected"],
-        default: "pending"
-    }
+        enum: [
+            "pending",
+            "applied",
+            "under_review",
+            "shortlisted",
+            "interview_scheduled",
+            "accepted",
+            "rejected"
+        ],
+        default: "applied"
+    },
+
+    interviewDetails: {
+        interviewDate: { type: String },
+        interviewTime: { type: String },
+        meetingLink: { type: String },
+        roundName: { type: String, default: "Technical Round 1" },
+        notes: { type: String },
+    },
+
+    statusHistory: [
+        {
+            status: { type: String },
+            changedAt: { type: Date, default: Date.now },
+            notes: { type: String },
+        }
+    ],
 
 }, { timestamps: true });
 

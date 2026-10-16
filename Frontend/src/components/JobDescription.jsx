@@ -5,22 +5,80 @@ import { Button } from './ui/button';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { JOB_API_END_POINT, APPLICATION_API_END_POINT } from '@/Utils/constant';
-import { setSingleJob } from '@/redux/jobSlice';
+import { setSingleJob, setAllSavedJobs } from '@/redux/jobSlice';
+import { setUser } from '@/redux/authslice';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
+import { Bookmark, BookmarkCheck } from 'lucide-react';
 
 function JobDescription() {
-    const { singleJob } = useSelector(store => store.job);
+    const { singleJob, allSavedJobs } = useSelector(store => store.job);
     const { user } = useSelector(store => store.auth || {});
     
     const [isApplied, setIsApplied] = useState(false);
     const [loading, setLoading] = useState(false);
     const [jobLoading, setJobLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     
     const params = useParams();
     const JobId = params.id;
     const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    const isSaved = Boolean(
+        user?.savedJobs?.some((savedId) => {
+            const id = typeof savedId === "object" ? savedId?._id : savedId;
+            return id?.toString() === JobId?.toString();
+        }) ||
+        allSavedJobs?.some((savedJob) => savedJob?._id?.toString() === JobId?.toString())
+    );
+
+    const toggleSaveHandler = async () => {
+        if (!user?._id) {
+            toast.error("Please login to save jobs");
+            navigate("/login");
+            return;
+        }
+
+        try {
+            setSaving(true);
+            const res = await axios.post(
+                `${JOB_API_END_POINT}/save/${JobId}`,
+                {},
+                { withCredentials: true }
+            );
+
+            if (res.data.success) {
+                toast.success(res.data.message);
+
+                dispatch(
+                    setUser({
+                        ...user,
+                        savedJobs: res.data.savedJobs,
+                    })
+                );
+
+                if (res.data.isSaved) {
+                    if (singleJob) {
+                        dispatch(setAllSavedJobs([singleJob, ...(allSavedJobs || [])]));
+                    }
+                } else {
+                    dispatch(
+                        setAllSavedJobs(
+                            (allSavedJobs || []).filter(
+                                (item) => item?._id?.toString() !== JobId?.toString()
+                            )
+                        )
+                    );
+                }
+            }
+        } catch (error) {
+            console.error("Save Job Error:", error);
+            toast.error(error.response?.data?.message || "Failed to update saved job");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     
     const applyjobHandler = async () => {
@@ -180,26 +238,51 @@ function JobDescription() {
                 </div>
 
                 
-                <Button
-                    onClick={applyjobHandler}
-                    disabled={isApplied || loading}
-                    className={`rounded-lg px-6 ${
-                        isApplied
-                            ? 'bg-gray-600 cursor-not-allowed'
-                            : 'bg-[#7209b7] hover:bg-[#5f32ad]'
-                    }`}
-                >
-                    {loading ? (
-                        <>
-                            <span className="animate-spin mr-2">⏳</span>
-                            Applying...
-                        </>
-                    ) : isApplied ? (
-                        " Already Applied"
-                    ) : (
-                        "Apply Now"
-                    )}
-                </Button>
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="outline"
+                        onClick={toggleSaveHandler}
+                        disabled={saving}
+                        className={`flex items-center gap-2 rounded-lg px-4 ${
+                            isSaved
+                                ? "border-[#6A38C2] text-[#6A38C2] bg-purple-50 hover:bg-purple-100"
+                                : "hover:border-[#6A38C2] hover:text-[#6A38C2]"
+                        }`}
+                    >
+                        {isSaved ? (
+                            <>
+                                <BookmarkCheck className="w-4 h-4 text-[#6A38C2] fill-[#6A38C2]" />
+                                <span>Saved</span>
+                            </>
+                        ) : (
+                            <>
+                                <Bookmark className="w-4 h-4" />
+                                <span>Save Job</span>
+                            </>
+                        )}
+                    </Button>
+
+                    <Button
+                        onClick={applyjobHandler}
+                        disabled={isApplied || loading}
+                        className={`rounded-lg px-6 ${
+                            isApplied
+                                ? 'bg-gray-600 cursor-not-allowed'
+                                : 'bg-[#7209b7] hover:bg-[#5f32ad]'
+                        }`}
+                    >
+                        {loading ? (
+                            <>
+                                <span className="animate-spin mr-2">⏳</span>
+                                Applying...
+                            </>
+                        ) : isApplied ? (
+                            " Already Applied"
+                        ) : (
+                            "Apply Now"
+                        )}
+                    </Button>
+                </div>
             </div>
 
             {/* Job Description Section */}

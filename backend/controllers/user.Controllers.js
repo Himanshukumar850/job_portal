@@ -86,6 +86,7 @@ export const register = async (req, res) => {
       phoneNumber: user.phoneNumber,
       role: user.role,
       profile: user.profile,
+      savedJobs: user.savedJobs || [],
     };
 
     const isProduction = process.env.NODE_ENV === "production";
@@ -180,6 +181,7 @@ export const login = async (req, res) => {
       phoneNumber: user.phoneNumber,
       role: user.role,
       profile: user.profile,
+      savedJobs: user.savedJobs || [],
     };
 
     const isProduction = process.env.NODE_ENV === "production";
