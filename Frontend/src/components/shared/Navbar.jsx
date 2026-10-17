@@ -25,6 +25,8 @@ import axios from "axios";
 import { USER_API_END_POINT } from "@/Utils/constant";
 import { toast } from "sonner";
 import { setUser } from "@/redux/authslice";
+import NotificationPopover from "./NotificationPopover";
+import useGetNotifications from "@/hooks/useGetNotifications";
 
 const MotionDiv = motion.div;
 
@@ -35,6 +37,9 @@ const Navbar = () => {
   const location = useLocation();
 
   const [openSheet, setOpenSheet] = useState(false);
+
+  // Hook to automatically fetch and poll notifications
+  useGetNotifications();
 
   const isActive = (path) =>   path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
 
@@ -74,9 +79,14 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
           
           {/* Logo */}
-          <h1 className="text-xl sm:text-2xl font-bold">
+          <Link to="/" className="text-xl sm:text-2xl font-bold">
             Job <span className="text-[#F3002F]">Portal</span>
-          </h1>
+          </Link>
+
+          {/* Mobile Notification Trigger (Top Right on Mobile) */}
+          <div className="flex md:hidden items-center">
+            {user && <NotificationPopover />}
+          </div>
 
           {/* Desktop Nav */}
           <ul className="hidden md:flex gap-8 font-medium">
@@ -110,13 +120,16 @@ const Navbar = () => {
                 </Link>
               </>
             ) : (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Avatar className="cursor-pointer h-10 w-10">
-                    <AvatarImage src={user?.profile?.profilePicture} />
-                    <AvatarFallback>CN</AvatarFallback>
-                  </Avatar>
-                </PopoverTrigger>
+              <div className="flex items-center gap-2">
+                <NotificationPopover />
+
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Avatar className="cursor-pointer h-10 w-10 border border-gray-100 hover:ring-2 hover:ring-[#6A38C2]/40 transition-all">
+                      <AvatarImage src={user?.profile?.profilePicture} />
+                      <AvatarFallback>CN</AvatarFallback>
+                    </Avatar>
+                  </PopoverTrigger>
 
                 {/* ✅ CLEAN DROPDOWN */}
                 <PopoverContent className="w-72 p-0 rounded-xl shadow-lg border bg-white overflow-hidden">
@@ -168,7 +181,8 @@ const Navbar = () => {
                   </div>
                 </PopoverContent>
               </Popover>
-            )}
+            </div>
+          )}
           </div>
         </div>
       </header>

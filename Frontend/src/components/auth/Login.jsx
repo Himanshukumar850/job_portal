@@ -10,6 +10,7 @@ import { USER_API_END_POINT } from "../../Utils/constant";
 import { useDispatch, useSelector } from "react-redux";
 import { setLoading, setUser } from "@/redux/authslice";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import ForgotPasswordDialog from "./ForgotPasswordDialog";
 
 const Login = () => {
 
@@ -21,6 +22,7 @@ const Login = () => {
 
  
   const [showPassword, setShowPassword] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   const { loading, user } = useSelector(store => store.auth);
   const navigate = useNavigate();
@@ -108,22 +110,32 @@ const Login = () => {
           <div className="mb-4">
             <Label>Password</Label>
 
-            <div className="relative">
+            <div className="relative mt-1">
               <Input
                 type={showPassword ? "text" : "password"}
                 value={input.password}
                 name="password"
                 onChange={changeeventHandler}
                 placeholder="Enter your password"
-                className="mt-1 pr-10 focus:ring-2 focus:ring-[#6A38C2]"
+                className="pr-10 focus:ring-2 focus:ring-[#6A38C2]"
               />
 
               <span
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 cursor-pointer"
+                className="absolute right-3 top-3 cursor-pointer text-gray-500 hover:text-gray-700"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </span>
+            </div>
+
+            <div className="flex justify-end mt-1.5">
+              <button
+                type="button"
+                onClick={() => setForgotOpen(true)}
+                className="text-xs text-[#6A38C2] hover:underline font-medium transition-colors"
+              >
+                Forgot Password?
+              </button>
             </div>
           </div>
 
@@ -176,6 +188,13 @@ const Login = () => {
           </p>
 
         </form>
+
+        {/* Forgot Password OTP Modal */}
+        <ForgotPasswordDialog
+          open={forgotOpen}
+          setOpen={setForgotOpen}
+          initialEmail={input.email}
+        />
 
       </div>
     </div>

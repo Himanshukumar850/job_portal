@@ -37,6 +37,18 @@ const userSchema = new mongoose.Schema({
             ref: "Job",
         }
     ],
+    resetPasswordOTP: {
+        type: String,
+        default: null,
+    },
+    resetPasswordOTPExpires: {
+        type: Date,
+        default: null,
+    },
+    resetPasswordAttempts: {
+        type: Number,
+        default: 0,
+    },
 },{timestamps:true});
 const User = mongoose.model("User",userSchema);
 export default User;

@@ -278,6 +278,40 @@ export const getStatusUpdateEmailTemplate = ({
   return getBaseEmailWrapper(content);
 };
 
+// 4. OTP / PASSWORD RESET TEMPLATE
+export const getOtpEmailTemplate = ({ userName, otp }) => {
+  const content = `
+    <h1 style="color: #1a202c; font-size: 22px; font-weight: 700; margin: 0 0 12px 0;">
+      Password Reset Request 🔐
+    </h1>
+    <p style="color: #4a5568; font-size: 15px; margin: 0 0 16px 0;">
+      Hi <strong>${userName || "User"}</strong>,
+    </p>
+    <p style="color: #4a5568; font-size: 15px; margin: 0 0 24px 0;">
+      We received a request to reset your password for your <strong>Job Portal</strong> account. Use the 6-digit verification code below to complete the reset process:
+    </p>
+
+    <!-- OTP Display Box -->
+    <div style="background: linear-gradient(135deg, #f7f5ff 0%, #efeaff 100%); border: 2px dashed #6A38C2; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
+      <p style="margin: 0 0 8px 0; color: #6A38C2; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+        Your 6-Digit Verification Code
+      </p>
+      <div style="font-size: 38px; font-weight: 800; color: #6A38C2; letter-spacing: 12px; font-family: 'Courier New', Courier, monospace; margin: 8px 0;">
+        ${otp}
+      </div>
+      <p style="margin: 8px 0 0 0; color: #718096; font-size: 13px;">
+        ⏱️ Valid for <strong>10 minutes</strong> only
+      </p>
+    </div>
+
+    <div style="background-color: #fffaf0; border-left: 4px solid #dd6b20; border-radius: 6px; padding: 14px 16px; margin-bottom: 24px; font-size: 13px; color: #7b341e; line-height: 1.5;">
+      <strong>⚠️ Security Notice:</strong> Never share this verification code with anyone. Job Portal staff will never ask for your password or OTP. If you did not make this request, your account is safe and you can ignore this email.
+    </div>
+  `;
+
+  return getBaseEmailWrapper(content);
+};
+
 // Non-Blocking Asynchronous Email Sender (Zero API Latency)
 export const sendEmailAsync = ({ to, subject, html, text }) => {
   // Execute in background without blocking calling thread

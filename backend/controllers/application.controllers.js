@@ -8,6 +8,7 @@ import {
   getApplicationEmailTemplate,
   getStatusUpdateEmailTemplate,
 } from "../utils/emailService.js";
+import { createNotificationAsync } from "./notification.controllers.js";
 
 // APPLY JOB
 export const applyJob = async (req, res) => {
@@ -82,6 +83,18 @@ export const applyJob = async (req, res) => {
         to: req.user.email,
         subject: `Application Submitted: ${job.title} at ${companyName}`,
         html: emailHtml,
+      });
+    }
+
+    // Trigger In-app Notification for recruiter (Non-blocking)
+    if (job.created_by) {
+      createNotificationAsync({
+        recipient: job.created_by,
+        sender: userId,
+        title: "New Application Received! 👤",
+        message: `${req.user?.fullname || "A candidate"} applied for ${job.title}`,
+        type: "new_application",
+        link: `/admin/jobs/${job._id}/applicants`,
       });
     }
 
@@ -320,6 +333,30 @@ export const updateStatus = async (req, res) => {
           html: emailHtml,
         });
       }
+
+      // Trigger In-app Notification for candidate (Non-blocking)
+      const notifTitle =
+        normalizedStatus === "interview_scheduled"
+          ? "Interview Scheduled! 📅"
+        : normalizedStatus === "accepted"
+          ? "Job Offer Received! 🎉"
+          : normalizedStatus === "shortlisted"
+          ? "Shortlisted for Next Round ⭐"
+          : "Application Status Update 📋";
+
+      const notifMsg =
+        normalizedStatus === "interview_scheduled"
+          ? `Interview scheduled for ${jobTitle} at ${companyName} on ${application.interviewDetails.interviewDate} at ${application.interviewDetails.interviewTime}`
+          : `Your application for ${jobTitle} at ${companyName} has been moved to ${normalizedStatus.replace("_", " ")}`;
+
+      createNotificationAsync({
+        recipient: application.applicant._id,
+        sender: req.id,
+        title: notifTitle,
+        message: notifMsg,
+        type: normalizedStatus === "interview_scheduled" ? "interview_scheduled" : "application_status",
+        link: "/profile",
+      });
     }
 
     return res.status(200).json({
