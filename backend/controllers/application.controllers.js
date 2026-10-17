@@ -1,6 +1,13 @@
 import mongoose from "mongoose";
 import Application from "../models/Application.model.js";
 import Job from "../models/job.model.js";
+import {
+  sendEmailAsync,
+  generateGoogleCalendarLink,
+  getInterviewEmailTemplate,
+  getApplicationEmailTemplate,
+  getStatusUpdateEmailTemplate,
+} from "../utils/emailService.js";
 
 // APPLY JOB
 export const applyJob = async (req, res) => {
@@ -58,6 +65,25 @@ export const applyJob = async (req, res) => {
 
     job.applications.push(newApplication._id);
     await job.save();
+
+    // Trigger asynchronous confirmation email to applicant (Non-blocking)
+    if (req.user?.email) {
+      await job.populate("company");
+      const companyName = job.company?.name || "the hiring organization";
+      const portalUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/profile`;
+      const emailHtml = getApplicationEmailTemplate({
+        candidateName: req.user.fullname || "Applicant",
+        jobTitle: job.title,
+        companyName,
+        portalUrl,
+      });
+
+      sendEmailAsync({
+        to: req.user.email,
+        subject: `Application Submitted: ${job.title} at ${companyName}`,
+        html: emailHtml,
+      });
+    }
 
     return res.status(201).json({
       message: "Applied successfully",
@@ -179,7 +205,17 @@ export const updateStatus = async (req, res) => {
       });
     }
 
-    const application = await Application.findById(applicationId).populate("job");
+    const application = await Application.findById(applicationId)
+      .populate({
+        path: "job",
+        populate: {
+          path: "company",
+        },
+      })
+      .populate({
+        path: "applicant",
+        select: "fullname email",
+      });
 
     if (!application) {
       return res.status(404).json({
@@ -227,6 +263,64 @@ export const updateStatus = async (req, res) => {
     });
 
     await application.save();
+
+    // Trigger Smart Asynchronous Email Notifications (Non-blocking)
+    if (application.applicant?.email) {
+      const companyName = application.job?.company?.name || "the hiring organization";
+      const candidateName = application.applicant?.fullname || "Candidate";
+      const jobTitle = application.job?.title || "Job Position";
+      const portalUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/profile`;
+
+      if (normalizedStatus === "interview_scheduled") {
+        const calendarUrl = generateGoogleCalendarLink({
+          title: `Interview: ${jobTitle} at ${companyName}`,
+          description: `Interview for ${jobTitle} at ${companyName}.\nRound: ${application.interviewDetails.roundName}\nMeeting Link: ${application.interviewDetails.meetingLink}\nNotes: ${application.interviewDetails.notes}`,
+          location: application.interviewDetails.meetingLink,
+          interviewDate: application.interviewDetails.interviewDate,
+          interviewTime: application.interviewDetails.interviewTime,
+        });
+
+        const emailHtml = getInterviewEmailTemplate({
+          candidateName,
+          jobTitle,
+          companyName,
+          roundName: application.interviewDetails.roundName,
+          interviewDate: application.interviewDetails.interviewDate,
+          interviewTime: application.interviewDetails.interviewTime,
+          meetingLink: application.interviewDetails.meetingLink,
+          calendarUrl,
+          notes: application.interviewDetails.notes,
+        });
+
+        sendEmailAsync({
+          to: application.applicant.email,
+          subject: `Interview Invitation: ${jobTitle} at ${companyName}`,
+          html: emailHtml,
+        });
+      } else {
+        const emailHtml = getStatusUpdateEmailTemplate({
+          candidateName,
+          jobTitle,
+          companyName,
+          status: normalizedStatus,
+          notes: notes || "",
+          portalUrl,
+        });
+
+        const subject =
+          normalizedStatus === "accepted"
+            ? `Congratulations! Job Offer for ${jobTitle} at ${companyName} 🎉`
+            : normalizedStatus === "shortlisted"
+            ? `Update: You've been Shortlisted for ${jobTitle} at ${companyName}`
+            : `Update on your application for ${jobTitle} at ${companyName}`;
+
+        sendEmailAsync({
+          to: application.applicant.email,
+          subject,
+          html: emailHtml,
+        });
+      }
+    }
 
     return res.status(200).json({
       message:
